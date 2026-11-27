@@ -141,5 +141,7 @@ A missing family stops the render. The CLI embeds fonts in the SVG; where they c
 
 ## Limitations
 
+- A consortium is an author whose `name` is the group's name; the statement prints it as written.
+  Aliases and members are not read.
 - Names are written in full. For statements with initials, use the app or package CLI.
 - Non-author contributors (acknowledgements) aren't handled: Quarto has no field for them.

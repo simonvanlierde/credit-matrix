@@ -1,7 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; fixtures are files on disk
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { fromCsv } from "../export/csv";
 import { fromJson } from "../export/json";
 import { fromJats4rXml } from "../export/xml-import";
@@ -15,12 +15,12 @@ function fixture(name: string): string {
 }
 
 /** Role names with a score above zero, as `name:score`. */
-function scores(author: Author | undefined): string[] {
+function scores(author: Contributor | undefined): string[] {
   return (author?.contributions ?? []).filter((c) => c.score > 0).map((c) => `${c.role}:${c.score}`);
 }
 
 /** What a decoded author list holds, for comparing against {@link ROSTER}. */
-function summarize(authors: Author[]) {
+function summarize(authors: Contributor[]) {
   return authors.map((a) => ({
     name: a.name,
     type: a.contributorType,

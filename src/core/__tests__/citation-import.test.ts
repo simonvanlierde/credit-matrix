@@ -167,11 +167,11 @@ it("keeps structured name parts, and only for people", async () => {
     surname: "",
   });
   expect(await read({ name: "Ana Maria Lima" })).toMatchObject({ first: "Ana", middle: "Maria", surname: "Lima" });
-  // An organisation keeps its name as written, not rebuilt from given and family names, and gets
-  // no ORCID. The name still splits into parts like any other.
+  // An organisation is a group: it keeps its name as written, not rebuilt from given and family
+  // names, and has no name parts or ORCID.
   expect(
     await read({ type: "Organization", name: "Acme Consortium Ltd", givenName: "Zed", familyName: "Quux" }),
-  ).toMatchObject({ first: "Acme", middle: "Consortium", surname: "Ltd" });
+  ).toMatchObject({ name: "Acme Consortium Ltd", first: undefined, surname: undefined });
   const [org] = (
     await importAny(
       codemetaOf({ author: [{ "@type": "Organization", name: "Lab Group", "@id": "0000-0002-1825-0097" }] }),

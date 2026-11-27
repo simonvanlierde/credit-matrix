@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { type Author, createAuthor } from "@/core";
+import { type Contributor, createAuthor } from "@/core";
 import { docFiles } from "@/docs/pages";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
@@ -12,7 +12,7 @@ import { StatementOutput } from "./StatementOutput";
 const store = () => useContributionStore.getState();
 const initial = store();
 
-function twoAuthors(): Author[] {
+function twoAuthors(): Contributor[] {
   return [
     createAuthor("Grace Hopper", {
       contributions: [

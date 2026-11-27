@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { CREDIT_ROLES, createAuthor, toJson } from "@/core";
-import { MAX_AUTHORS } from "@/core/author";
+import { MAX_AUTHORS, MAX_GROUP_MEMBERS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import type { LocaleCode } from "@/core/i18n";
 import { DEFAULT_HEATMAP_SETTINGS, repairHeatmapSettings } from "@/lib/heatmap-settings";
@@ -1150,6 +1150,148 @@ describe("contribution store", () => {
       expect(merged.drafts.d3?.selfId).toBeNull();
       const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
       expect(saved.drafts.d1?.selfId).toBe("ana-1");
+    });
+  });
+
+  describe("groups", () => {
+    it("adds a group in list order, refuses an unusable name and a bad ROR id", () => {
+      store().addAuthor("Ana Lima");
+      const id = store().addGroup("The COVIDSurg Collaborative", { alias: "COVIDSurg", ror: "05dxps055" });
+      expect(store().authors.map((a) => [a.kind, a.name])).toEqual([
+        ["person", "Ana Lima"],
+        ["group", "The COVIDSurg Collaborative"],
+      ]);
+      expect(store().authors[1]).toMatchObject({ id, initials: "COVIDSurg", ror: "05dxps055" });
+      expect(store().addGroup("123")).toBeNull();
+      expect(store().addGroup("Bad ROR", { ror: "05dxps056" })).toBeNull();
+      expect(store().authors).toHaveLength(2);
+    });
+
+    it("scores a group, edits it, and clears a field with null", () => {
+      const id = store().addGroup("Study Group") ?? "";
+      store().setAuthorScore(id, 0, 100);
+      expect(store().updateGroup(id, { alias: "SG", membersAre: "authors", members: [{ name: "Ana" }] })).toBe(true);
+      expect(store().authors[0]).toMatchObject({ alias: "SG", initials: "SG", membersAre: "authors" });
+      expect(store().authors[0]?.contributions[0]?.score).toBe(100);
+      store().updateGroup(id, { alias: null, name: "Study Consortium" });
+      expect(store().authors[0]).toMatchObject({ name: "Study Consortium", initials: "SC" });
+      expect(store().authors[0]).not.toHaveProperty("alias");
+      expect(store().updateGroup("missing", { alias: "x" })).toBe(false);
+      expect(store().updateAuthorName(id, "Renamed Group")).toBe(true);
+      expect(store().authors[0]).toMatchObject({ kind: "group", name: "Renamed Group" });
+    });
+
+    it("is never corresponding, has no ORCID iD, and cannot be you", () => {
+      const id = store().addGroup("Study Group") ?? "";
+      store().setAuthorMarker(id, "corresponding", true);
+      store().setAuthorMarker(id, "equalContribution", true);
+      store().updateAuthorOrcid(id, "0000-0002-1825-0097");
+      store().setSelfId(id);
+      expect(store().authors[0]).not.toHaveProperty("corresponding");
+      expect(store().authors[0]).not.toHaveProperty("orcid");
+      expect(store().selfId).toBeNull();
+      expect(store().updateGroup(store().addAuthor("Ana Lima") ?? "", { alias: "x" })).toBe(false);
+    });
+
+    it("keeps a member's name and drops the link when the person row is deleted", () => {
+      const ana = store().addAuthor("Ana Lima") ?? "";
+      const group = store().addGroup("Study Group", {
+        members: [{ name: "Ana Lima", personId: ana }],
+        contactId: ana,
+      });
+      expect(store().authors[1]).toMatchObject({ contactId: ana, members: [{ name: "Ana Lima", personId: ana }] });
+      store().removeAuthor(ana);
+      expect(store().authors).toHaveLength(1);
+      expect(store().authors[0]).toMatchObject({ id: group, members: [{ name: "Ana Lima" }] });
+      expect(store().authors[0]).not.toHaveProperty("contactId");
+    });
+
+    it("repairs a stored group, drops a bad ROR id and a dead link, and reads a save from before groups", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const { kind: _kind, ...legacy } = createAuthor("Ana Lima");
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: {
+              authors: [
+                { ...legacy, id: "ana" },
+                {
+                  kind: "group",
+                  id: "g1",
+                  name: "Study Group",
+                  ror: "nope",
+                  membersAre: "something",
+                  members: [{ name: "Ana", personId: "ana" }, { name: "Ben", personId: "gone" }, { name: "" }, 4],
+                  contactId: "ana",
+                  contributions: [{ role: "Software", score: 100 }],
+                },
+              ],
+              selfId: "g1",
+            },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      expect(merged.authors[0]).toMatchObject({ kind: "person", name: "Ana Lima" });
+      expect(merged.authors[1]).toMatchObject({
+        kind: "group",
+        membersAre: "collaborators",
+        members: [{ name: "Ana", personId: "ana" }, { name: "Ben" }],
+        contactId: "ana",
+      });
+      expect(merged.authors[1]).not.toHaveProperty("ror");
+      expect(merged.selfId).toBeNull();
+    });
+
+    it("refuses more members than a group holds, instead of cutting the list", () => {
+      const id = store().addGroup("Big Group") ?? "";
+      const members = (n: number) => Array.from({ length: n }, (_, i) => ({ name: `Member ${i}` }));
+      expect(store().updateGroup(id, { members: members(MAX_GROUP_MEMBERS + 1) })).toBe(false);
+      expect(store().authors[0]).toMatchObject({ members: [] });
+      expect(store().addGroup("Bigger Group", { members: members(MAX_GROUP_MEMBERS + 1) })).toBeNull();
+      expect(store().updateGroup(id, { members: members(MAX_GROUP_MEMBERS) })).toBe(true);
+    });
+
+    it("links a copied draft's group to the copy's rows", () => {
+      const ana = store().addAuthor("Ana Lima") ?? "";
+      store().addGroup("Study Group", { members: [{ name: "Ana Lima", personId: ana }], contactId: ana });
+      const copyId = store().duplicateDraft(store().activeDraftId) ?? "";
+      const [person, group] = store().drafts[copyId]?.authors ?? [];
+      expect(person?.id).not.toBe(ana);
+      expect(group).toMatchObject({ contactId: person?.id, members: [{ name: "Ana Lima", personId: person?.id }] });
+    });
+
+    it("re-points a stored link when the person's id is replaced", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: {
+              authors: [
+                { ...createAuthor("Ana Lima"), id: "a b" },
+                {
+                  kind: "group",
+                  id: "g1",
+                  name: "Study Group",
+                  members: [{ name: "Ana", personId: "a b" }],
+                  contactId: "a b",
+                  contributions: [],
+                },
+              ],
+            },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      const [person, group] = merged.authors;
+      expect(person?.id).not.toBe("a b");
+      expect(group).toMatchObject({ contactId: person?.id, members: [{ name: "Ana", personId: person?.id }] });
+    });
+
+    it("stores under version 7", () => {
+      expect(PERSIST_VERSION).toBe(7);
     });
   });
 

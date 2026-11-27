@@ -238,6 +238,15 @@ describe("credit-matrix convert", () => {
     expect(await run(["statement", xml])).toBe(await run(["statement", csv]));
   });
 
+  it("writes a group as <collab-wrap> with --jats-version 1.4 and rejects other versions", async () => {
+    const groupCsv = file("group.csv", "Name,Kind,Investigation\nThe COVIDSurg Collaborative,group,100\n");
+    const v13 = await run(["convert", groupCsv, "--to", "jats"]);
+    const v14 = await run(["convert", groupCsv, "--to", "jats", "--jats-version", "1.4"]);
+    expect(v13).toContain("<collab>");
+    expect(v14).toContain("<collab-wrap>");
+    await expect(run(["convert", groupCsv, "--to", "jats", "--jats-version", "2"])).rejects.toThrow(/1\.3 or 1\.4/);
+  });
+
   it("writes JATS without degree-contribution with --yes-no, and reads it back", async () => {
     const ticks = file("ticks.csv", "Name,Conceptualization,Software\nGrace Hopper,100,100\nCharles Darwin,,100\n");
     const xml = await run(["convert", ticks, "--to", "jats", "--yes-no"]);
@@ -379,6 +388,10 @@ describe("credit-matrix usage", () => {
 
   it("shows the short flags -h and -v in the usage text", () => {
     expect(USAGE).toContain("credit-matrix -h, --help | -v, --version");
+  });
+
+  it("names --jats-version in the convert usage", () => {
+    expect(USAGE).toContain("[--jats-version 1.3|1.4]");
   });
 
   it("names the allowed values when a heatmap option is wrong", async () => {

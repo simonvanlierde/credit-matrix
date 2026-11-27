@@ -1,7 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; fixtures are files on disk
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromTenzing, isTenzing, toTenzing } from "../export/tenzing";
 import { detectFormat } from "../import";
@@ -11,7 +11,7 @@ function fixture(name: string): string {
   return readFileSync(`src/core/__tests__/fixtures/${name}`, "utf8");
 }
 
-function roles(author: Author | undefined): string[] {
+function roles(author: Contributor | undefined): string[] {
   return (author?.contributions ?? []).filter((c) => c.score > 0).map((c) => `${c.role}:${c.score}`);
 }
 
@@ -231,7 +231,7 @@ describe("toTenzing", () => {
   });
 
   it("keeps every contributor and every role through a round trip", () => {
-    const summary = (authors: Author[]) =>
+    const summary = (authors: Contributor[]) =>
       authors
         .map((author) => ({
           name: author.name,

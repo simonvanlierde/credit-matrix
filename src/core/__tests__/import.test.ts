@@ -343,7 +343,7 @@ describe("normalizeRoster", () => {
     expect(rebuilt).not.toBe(swapped);
     expect(rebuilt?.contributions.map((c) => c.role)).toEqual(grace.contributions.map((c) => c.role));
 
-    const stray = { ...grace, legacy: true } as typeof grace;
+    const stray = { ...grace, legacy: true } as unknown as typeof grace;
     expect(normalizeRoster([stray])[0]).not.toHaveProperty("legacy");
   });
 });

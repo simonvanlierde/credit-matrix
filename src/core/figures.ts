@@ -19,7 +19,7 @@ import {
   rgb,
   setLineJoin,
 } from "pdf-lib";
-import type { Author } from "./author";
+import type { Contributor } from "./author";
 import { hexRgb } from "./contributor-color";
 import { escapeXml } from "./export/escape-xml";
 import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
@@ -72,9 +72,9 @@ export interface FigureSvgOptions extends FigureOptions {
 }
 
 export interface FigureRenderer {
-  svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
+  svg(authors: Contributor[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
-  pdf(authors: Author[], options?: FigureOptions, widthMm?: number): Promise<Uint8Array>;
+  pdf(authors: Contributor[], options?: FigureOptions, widthMm?: number): Promise<Uint8Array>;
 }
 
 /** The file a `font` family was found in, reported once per renderer and family. */
@@ -475,7 +475,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return runs;
   }
 
-  function layoutSvg(authors: Author[], options?: Layout, unavailable?: Set<FontSource>): string {
+  function layoutSvg(authors: Contributor[], options?: Layout, unavailable?: Set<FontSource>): string {
     return buildHeatmapSvg(authors, {
       ...options,
       // The system font stack for text no face draws.

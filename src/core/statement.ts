@@ -15,13 +15,15 @@
  * ("A.B. conceived the study") names no CRediT role, so it yields nothing rather than a guess.
  * Initials that fit no author, or several, are reported, never guessed.
  */
-import type { Author } from "./author";
 import { CREDIT_ROLES, type CreditRoleName, creditSlug } from "./credit-roles";
 
 /** An author as the parser needs it: given names and surname, as separate strings. */
 export interface StatementAuthor {
   given: string;
   surname: string;
+  /** A group: matched on its whole name (in `surname`) or its alias, never on initials. */
+  group?: boolean;
+  alias?: string;
 }
 
 /**
@@ -29,10 +31,19 @@ export interface StatementAuthor {
  * display name before the surname, so "Grace Brewster Murray Hopper" keeps all three, and "Hopper, Grace"
  * reads the part after the comma.
  */
-export function statementAuthor(
-  author: Pick<Author, "name" | "firstName" | "middleName" | "surname">,
-): StatementAuthor {
-  const { name, surname } = author;
+export function statementAuthor(author: {
+  name: string;
+  kind?: "person" | "group";
+  alias?: string;
+  firstName?: string;
+  middleName?: string;
+  surname?: string;
+}): StatementAuthor {
+  // A group has no given name: its whole name stands in the surname slot.
+  if (author.kind === "group") {
+    return { given: "", surname: author.name, group: true, ...(author.alias ? { alias: author.alias } : {}) };
+  }
+  const { name, surname = "" } = author;
   const comma = name.indexOf(",");
   if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
     return { given: name.slice(comma + 1).trim(), surname };
@@ -261,6 +272,8 @@ type Parts = string[];
  * of their own), every surname word, and the surname without particles in any case ("De Luca").
  */
 function nameParts(author: StatementAuthor): [Parts, Parts, Parts, Parts] {
+  // No parts, so no initials fit a group: "A" would otherwise name "Alpha Consortium".
+  if (author.group) return [[], [], [], []];
   const given = author.given.split(/[\s.-]+/u).filter(Boolean);
   const words = author.surname.split(/[\s-]+/u).filter(Boolean);
   const surname = words.filter((p) => !isLowerWord(p));
@@ -410,7 +423,9 @@ function nameVariants(author: StatementAuthor): [Set<string>, Set<string>] {
   const { surname, given } = author;
   if (!surname) return [new Set(), new Set()];
   const name = `${given} ${surname}`.trim();
-  const names = given ? [name, `${surname} ${given}`, `${surname}, ${given}`] : [surname];
+  const names = given
+    ? [name, `${surname} ${given}`, `${surname}, ${given}`]
+    : [surname, ...(author.group && author.alias ? [author.alias] : [])];
   const initials = nameParts(author)[0].map(first).join("");
   const hyphened = given
     .split(/\s+/u)
@@ -614,7 +629,12 @@ export function parseStatement(statement: string, authorList: readonly Statement
       `A statement is read up to ${MAX_STATEMENT_LENGTH} characters; this one has ${statement.length}.`,
     );
   }
-  const authors = authorList.map((a) => ({ given: a.given.normalize("NFC"), surname: a.surname.normalize("NFC") }));
+  const authors = authorList.map((a) => ({
+    ...a,
+    given: a.given.normalize("NFC"),
+    surname: a.surname.normalize("NFC"),
+    ...(a.alias ? { alias: a.alias.normalize("NFC") } : {}),
+  }));
   const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length));
   let text = original;
   const unresolved: string[] = [];

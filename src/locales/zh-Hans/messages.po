@@ -1950,3 +1950,45 @@ msgstr "写作工具"
 
 msgid "docsOnPage"
 msgstr "本页内容"
+
+msgid "addGroupButton"
+msgstr "添加团体(联盟或协作组)"
+
+msgid "groupBadge"
+msgstr "团体"
+
+msgid "groupDetails"
+msgstr "团体详情"
+
+msgid "groupAliasLabel"
+msgstr "简称(用于标签和图)"
+
+msgid "groupRorLabel"
+msgstr "ROR ID 或网址"
+
+msgid "errRorInvalid"
+msgstr "这不是有效的 ROR ID。"
+
+msgid "errGroupMembersLimit"
+msgstr "一个小组最多可包含 {limit} 位成员。请先移除一些成员，再保存列表。"
+
+msgid "groupMembersLabel"
+msgstr "成员(每行一个姓名)"
+
+msgid "groupMembersAre"
+msgstr "成员是"
+
+msgid "groupMembersAuthors"
+msgstr "作者"
+
+msgid "groupMembersCollaborators"
+msgstr "协作者"
+
+msgid "groupContactLabel"
+msgstr "联系人(回复审阅请求)"
+
+msgid "groupContactNone"
+msgstr "无联系人"
+
+msgid "annGroupAdded"
+msgstr "已将 {name} 添加为团体。"

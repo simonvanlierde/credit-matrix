@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  AuthorSchema,
   activeContributions,
   ContributionSchema,
   hasContributions,
@@ -9,6 +8,7 @@ import {
   normalizeOrcid,
   ORCID_INPUT_REGEX,
   ORCID_REGEX,
+  PersonSchema,
   scoreToLevel,
 } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
@@ -16,6 +16,7 @@ import { createAuthor, parseAuthorText } from "../parse-authors";
 
 /** Minimal schema-valid author, for tests that vary one field. */
 const VALID_AUTHOR = {
+  kind: "person" as const,
   name: "Grace Hopper",
   firstName: "Grace",
   middleName: "",
@@ -132,7 +133,8 @@ describe("ORCID_INPUT_REGEX", () => {
 
 describe("schemas", () => {
   it("defaults a random id and accepts a minimal valid author", () => {
-    const author = AuthorSchema.parse({
+    const author = PersonSchema.parse({
+      kind: "person",
       name: "Grace Hopper",
       firstName: "Grace",
       middleName: "",
@@ -145,7 +147,8 @@ describe("schemas", () => {
 
   it("rejects an empty name", () => {
     expect(() =>
-      AuthorSchema.parse({
+      PersonSchema.parse({
+        kind: "person",
         name: "",
         firstName: "",
         middleName: "",
@@ -168,6 +171,7 @@ describe("schemas", () => {
 
   it("rejects a malformed ORCID but accepts a valid one", () => {
     const base = {
+      kind: "person" as const,
       name: "Grace Hopper",
       firstName: "Grace",
       middleName: "",
@@ -175,15 +179,15 @@ describe("schemas", () => {
       initials: "GH",
       contributions: [],
     };
-    expect(() => AuthorSchema.parse({ ...base, orcid: "bogus" })).toThrow();
-    expect(AuthorSchema.parse({ ...base, orcid: "0000-0002-1825-0097" }).orcid).toBe("0000-0002-1825-0097");
+    expect(() => PersonSchema.parse({ ...base, orcid: "bogus" })).toThrow();
+    expect(PersonSchema.parse({ ...base, orcid: "0000-0002-1825-0097" }).orcid).toBe("0000-0002-1825-0097");
   });
 
   // Regression: the schema accepted any non-empty name, so an imported "123"
   // parsed cleanly here and then threw inside createAuthor on the next store
   // mutation, reaching the user as a crash rather than an import error.
   it.each(["123", "  ", "-- --", "42.0"])("rejects %o, which createAuthor cannot build", (name) => {
-    expect(() => AuthorSchema.parse({ ...VALID_AUTHOR, name })).toThrow();
+    expect(() => PersonSchema.parse({ ...VALID_AUTHOR, name })).toThrow();
     expect(() => createAuthor(name)).toThrow();
   });
 
@@ -192,13 +196,13 @@ describe("schemas", () => {
   it.each(["0000-0002-1825-0097", "https://orcid.org/0000-0002-1825-0097"])(
     "accepts the ORCID placeholder name %o",
     (name) => {
-      expect(AuthorSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
+      expect(PersonSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
       expect(() => createAuthor(name)).not.toThrow();
     },
   );
 
   it.each(["Grace Hopper", "李雷", "O'Brien", "Ana-María"])("accepts the real name %o", (name) => {
-    expect(AuthorSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
+    expect(PersonSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
     expect(() => createAuthor(name)).not.toThrow();
   });
 
@@ -210,7 +214,7 @@ describe("schemas", () => {
       { role: "Software" as const, score: 90 },
       ...CREDIT_ROLES.map((role) => ({ role: role.name, score: 0 })),
     ];
-    expect(() => AuthorSchema.parse({ ...VALID_AUTHOR, contributions })).not.toThrow();
+    expect(() => PersonSchema.parse({ ...VALID_AUTHOR, contributions })).not.toThrow();
     expect(createAuthor("Grace Hopper", { contributions }).contributions).toContainEqual({
       role: "Software",
       score: 90,

@@ -1,6 +1,6 @@
 import { Check, Copy, Download } from "lucide-react";
 import { type ReactNode, useId, useMemo } from "react";
-import type { Author } from "@/core";
+import type { Contributor } from "@/core";
 import {
   DATA_FORMATS,
   type DataExportOptions,
@@ -15,7 +15,7 @@ export const EXPORT_ITEM_BUTTON =
   "flex min-h-7 max-sm:min-h-9 items-center gap-1 rounded px-1.5 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 type OutputProps = {
-  authors: Author[];
+  authors: Contributor[];
   format: DataFormat;
   options?: DataExportOptions;
   language?: string;

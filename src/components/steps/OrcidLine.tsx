@@ -1,6 +1,6 @@
 import { Fingerprint, UserSearch, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { type Author, isValidOrcid, normalizeOrcid } from "@/core";
+import { type Contributor, isValidOrcid, normalizeOrcid } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH } from "@/core/author";
 import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
@@ -126,7 +126,7 @@ export function OrcidLine({
   line,
   onPaste,
 }: {
-  author: Author;
+  author: Contributor;
   rowLocked: boolean;
   line: ReturnType<typeof useOrcidLine>;
   onPaste: (event: React.ClipboardEvent<HTMLInputElement>) => void;

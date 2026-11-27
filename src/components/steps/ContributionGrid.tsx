@@ -7,8 +7,8 @@ import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/compon
 import { SegmentedControl } from "@/components/ui/segmented";
 import { SettingsPanel } from "@/components/ui/settings-panel";
 import { UndoBar } from "@/components/ui/undo-bar";
-import { type Author, CREDIT_ROLES, type CreditRoleName, review, scoreToLevel } from "@/core";
-import { LEVEL_SCORE } from "@/core/author";
+import { type Contributor, CREDIT_ROLES, type CreditRoleName, review, scoreToLevel } from "@/core";
+import { LEVEL_SCORE, shortName } from "@/core/author";
 import { contributorHue, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
@@ -51,6 +51,12 @@ type AskState = { kind: "you" | "asked" | "settled" | "none" } | { kind: "differ
  * columns (or transposed), every cell a toggle. This doubles as the live
  * heatmap: cell fills use the same color scale as the downloadable SVG/PNG.
  */
+/** A head's accessible name: a group's head shows its alias, which a voice user names it by (WCAG 2.5.3). */
+function withShownName(author: Contributor): string {
+  const shown = shortName(author);
+  return author.name.toLowerCase().includes(shown.toLowerCase()) ? author.name : `${shown}, ${author.name}`;
+}
+
 export function ContributionGrid() {
   const { authors, inputMode, setInputMode, heatmapMonoColor, setAuthorScore, toggleContribution, welcomeOpen } =
     useContributionStore(
@@ -145,7 +151,7 @@ export function ContributionGrid() {
   // them through this ref, so a new closure never re-renders all 14×N of them.
   const cellApi = useRef<CellApi>(null);
   // The focused cell's mark comes back when the mouse leaves another cell.
-  const focusedLink = useRef<{ author: Author; roleIndex: number } | null>(null);
+  const focusedLink = useRef<{ author: Contributor; roleIndex: number } | null>(null);
   const { bulkUndo, runBulk, undoBulk, triggerRef: bulkTriggerRef } = useBulkUndo();
   // Right-click level picker: direct selection for pointer users, so correcting
   // an overshoot never means cycling a value through None. The anchor is the
@@ -168,14 +174,14 @@ export function ContributionGrid() {
 
   /** Accessible name for one assignment: cells, the mobile list and every announcement share it. */
   const levelLabel = (score: number) => translateUi(graded ? scoreToLevel(score) : score > 0 ? "contributed" : "none");
-  const assignmentLabel = (author: Author, roleIndex: number, score: number) =>
+  const assignmentLabel = (author: Contributor, roleIndex: number, score: number) =>
     t("a11yRoleAssignment", {
       role: translateInterfaceRole(CREDIT_ROLES[roleIndex]?.name ?? ""),
       name: author.name,
       level: levelLabel(score),
     });
 
-  function handleCellClick(author: Author, roleIndex: number, score: number) {
+  function handleCellClick(author: Contributor, roleIndex: number, score: number) {
     if (isFrozen(author.id)) return;
     if (inputMode === "levels") {
       // Step up to the next level, wrapping at the top. An off-cycle score from
@@ -221,7 +227,7 @@ export function ContributionGrid() {
     event: React.KeyboardEvent<HTMLButtonElement>,
     row: number,
     col: number,
-    author: Author,
+    author: Contributor,
     roleIndex: number,
   ) {
     // Modified keys belong to the browser: Ctrl+0 resets zoom, Alt+Left is Back.
@@ -323,8 +329,9 @@ export function ContributionGrid() {
   }
 
   // Locked, this is someone else's draft: their asks are not yours to track.
-  const reviewOf = (author: Author) => (locked || author.id === selfId ? undefined : review(author, asks[author.id]));
-  const askState = (author: Author): AskState => {
+  const reviewOf = (author: Contributor) =>
+    locked || author.id === selfId ? undefined : review(author, asks[author.id]);
+  const askState = (author: Contributor): AskState => {
     if (locked) return { kind: author.id === editableAuthorId ? "you" : "none" };
     if (author.id === selfId) return { kind: "you" };
     const { status, open } = review(author, asks[author.id]);
@@ -332,7 +339,7 @@ export function ContributionGrid() {
     return { kind: status.kind === "differs" ? "asked" : status.kind };
   };
   /** What a co-author said where it differs from the cell, for its accessible description. */
-  const theySay = (author: Author, roleIndex: number) => {
+  const theySay = (author: Contributor, roleIndex: number) => {
     const role = CREDIT_ROLES[roleIndex]?.name;
     const difference = reviewOf(author)?.open.find((candidate) => candidate.target === role);
     if (!difference || typeof difference.theirs === "boolean") return undefined;
@@ -349,7 +356,7 @@ export function ContributionGrid() {
       : undefined;
   // Each person's hue, by list position; one hue for all when the view says so.
   const hues = colorByContributor ? contributorHues(authors.length) : null;
-  const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
+  const hueOf = (author: Contributor) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
 
   cellApi.current = {
     label: assignmentLabel,
@@ -369,7 +376,7 @@ export function ContributionGrid() {
       setPicker({ authorId, roleIndex, x: event.clientX, y: event.clientY, cell: event.currentTarget });
     },
   };
-  const renderCell = (author: Author, roleIndex: number, row: number, col: number) => (
+  const renderCell = (author: Contributor, roleIndex: number, row: number, col: number) => (
     <GridCell
       key={`${author.id}-${CREDIT_ROLES[roleIndex]?.name}`}
       api={cellApi as RefObject<CellApi>}
@@ -419,7 +426,7 @@ export function ContributionGrid() {
   };
 
   /** A person's name in the matrix: opens their menu, and joins the grid's arrow-key focus like a role name. */
-  const nameHead = (author: Author, index: number, content: ReactNode, initials = false) => (
+  const nameHead = (author: Contributor, index: number, content: ReactNode, initials = false) => (
     <PersonMenu
       authorId={author.id}
       surface="grid"
@@ -432,7 +439,7 @@ export function ContributionGrid() {
           // Named by the person alone: a column header names every cell under it, so "Actions for …"
           // here would be read before each cell. An initials head says its initials first, so a voice
           // user can name the button by what it shows (WCAG 2.5.3).
-          aria-label={initials ? `${author.initials}, ${author.name}` : author.name}
+          aria-label={initials ? `${author.initials}, ${author.name}` : withShownName(author)}
           onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
           className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
         >
@@ -672,7 +679,7 @@ export function ContributionGrid() {
                                     className="block overflow-hidden text-ellipsis border-b-2 pb-0.5 text-xs font-semibold text-on-surface"
                                     style={{ borderColor: hues ? hueOf(author) : "transparent" }}
                                   >
-                                    {author.name}
+                                    {shortName(author)}
                                   </span>,
                                 )}
                               </AngledLabel>
@@ -715,9 +722,9 @@ export function ContributionGrid() {
                                 authorRow,
                                 <span
                                   className="block max-w-36 truncate text-[13px] font-medium text-on-surface"
-                                  title={author.name}
+                                  title={shortName(author)}
                                 >
-                                  {author.name}
+                                  {shortName(author)}
                                 </span>,
                               )}
                           </span>
@@ -835,18 +842,18 @@ export function ContributionGrid() {
 
 /** What a grid cell calls back into. Read through a ref so the cells can stay memoized. */
 interface CellApi {
-  label: (author: Author, roleIndex: number, score: number) => string;
-  click: (author: Author, roleIndex: number, score: number) => void;
+  label: (author: Contributor, roleIndex: number, score: number) => string;
+  click: (author: Contributor, roleIndex: number, score: number) => void;
   keyDown: (
     event: React.KeyboardEvent<HTMLButtonElement>,
     row: number,
     col: number,
-    author: Author,
+    author: Contributor,
     roleIndex: number,
   ) => void;
   focus: (row: number, col: number) => void;
   /** Mark this cell's phrase in the statement; no author clears the mark, or on hover hands it back to the focused cell. */
-  link: (author: Author | null, roleIndex: number, source: "hover" | "focus") => void;
+  link: (author: Contributor | null, roleIndex: number, source: "hover" | "focus") => void;
   openPicker: (authorId: string, roleIndex: number, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -877,7 +884,7 @@ const GridCell = memo(function GridCellInner({
   perPerson,
 }: {
   api: RefObject<CellApi>;
-  author: Author;
+  author: Contributor;
   roleIndex: number;
   row: number;
   col: number;

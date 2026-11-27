@@ -3,6 +3,7 @@ import { writeFileSync } from "node:fs";
 import process from "node:process";
 import { DOMParser as LinkedomParser } from "linkedom";
 import { describe, expect, it, vi } from "vitest";
+import type { Contributor } from "../author";
 import { activeContributions, MAX_AUTHORS } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributors } from "../export/crossref";
@@ -113,7 +114,7 @@ it.runIf(process.env.CROSSREF_OUT)("writes a fresh export for XSD validation", (
 });
 
 describe("fromCrossrefContributors", () => {
-  const shape = (a: ReturnType<typeof createAuthor>) => ({
+  const shape = (a: Contributor) => ({
     name: a.name,
     firstName: a.firstName,
     middleName: a.middleName,

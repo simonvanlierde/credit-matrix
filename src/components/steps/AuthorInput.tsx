@@ -39,7 +39,7 @@ import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { UndoBar } from "@/components/ui/undo-bar";
-import { type Author, review } from "@/core";
+import { type Contributor, isGroup, isPerson, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
@@ -47,6 +47,7 @@ import { useClaimLock } from "@/lib/use-claim-lock";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
 import { type Ask, useContributionStore } from "@/store/contribution-store";
+import { GroupFields } from "./GroupFields";
 import { OrcidLine, useOrcidLine } from "./OrcidLine";
 import { detectOrcid } from "./orcid";
 import { PersonMenu } from "./PersonMenu";
@@ -122,10 +123,11 @@ export function AuthorList() {
   useEffect(() => {
     if (listFocusRequested) setCollapsed(false);
   }, [listFocusRequested]);
-  const { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste } = useAddContributors();
+  const { newName, setNewName, addError, setAddError, handleAdd, handleAddGroup, handleAddPaste } =
+    useAddContributors();
   const addErrorId = useId();
   const [removed, setRemoved] = useState<{
-    author: Author;
+    author: Contributor;
     index: number;
     ask?: Ask;
     wasSelf: boolean;
@@ -154,7 +156,7 @@ export function AuthorList() {
 
   // Stable, so a memoized AuthorRow is not re-rendered by a new callback.
   const handleRemove = useCallback(
-    (author: Author, index: number) => {
+    (author: Contributor, index: number) => {
       // Removing a contributor drops their open ask and their "This is me"
       // mark; undo brings both back.
       const { asks, selfId } = useContributionStore.getState();
@@ -397,6 +399,21 @@ export function AuthorList() {
           </button>
         </div>
       )}
+      {!locked && newName.trim() && (
+        // The typed name as a group: one contributor for a consortium, with its members listed inside.
+        <button
+          type="button"
+          onClick={() => {
+            handleAddGroup();
+            // A successful add empties the field and removes this button, which would drop focus to the page.
+            addInputRef.current?.focus();
+          }}
+          className="mt-1 flex min-h-6 items-center gap-1.5 self-start rounded text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Users className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("addGroupButton")}
+        </button>
+      )}
 
       {/* No footer note: the Drafts menu already says drafts stay in this
           browser, right where deleting them lives. */}
@@ -443,7 +460,7 @@ function useAuthorLink(authorId: string | undefined) {
  * A person in the collapsed rail: their initials chip, linked on hover or focus like a full row,
  * and the trigger for the same person menu. Named by the person; Radix adds the popup state.
  */
-function RailChip({ author }: { author: Author }) {
+function RailChip({ author }: { author: Contributor }) {
   const linked = useContributionStore((s) => s.statementLink?.contributorId === author.id);
   const linkHandlers = useAuthorLink(author.id);
   return (
@@ -488,7 +505,7 @@ const AuthorRow = memo(function AuthorRowInner({
   enter,
 }: {
   index: number;
-  onRemove: (author: Author, index: number) => void;
+  onRemove: (author: Contributor, index: number) => void;
   enter: boolean;
 }) {
   const t = useTranslations();
@@ -552,11 +569,13 @@ const AuthorRow = memo(function AuthorRowInner({
   if (!author) return null;
 
   const authorId = author.id;
+  const group = isGroup(author);
   const hasOrcid = (author.orcid ?? "").length > 0;
   const isNonAuthor = author.contributorType === "non-author";
 
   function handleSmartPaste(event: React.ClipboardEvent<HTMLInputElement>) {
-    if (rowLocked) return;
+    // A group has no ORCID iD to paste.
+    if (rowLocked || group) return;
     const orcid = detectOrcid(event.clipboardData.getData("text"));
     if (!orcid) return;
     event.preventDefault();
@@ -673,6 +692,7 @@ const AuthorRow = memo(function AuthorRowInner({
                 {isNonAuthor ? <UserMinus className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
                 {isNonAuthor ? t("contributorTypeNonAuthor") : t("contributorTypeAuthor")}
               </button>
+              {group && <MarkerChip icon={<Users className="h-3 w-3" />} label={t("groupBadge")} />}
               {isSelf && (
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                   {t("teamYou")}
@@ -723,7 +743,7 @@ const AuthorRow = memo(function AuthorRowInner({
                 <PersonMenu
                   authorId={author.id}
                   surface="list"
-                  canAddOrcid={!hasOrcid && !orcidLine.editingOrcid}
+                  canAddOrcid={!group && !hasOrcid && !orcidLine.editingOrcid}
                   onAddOrcid={() => orcidLine.setEditingOrcid(true)}
                   trigger={
                     <button
@@ -753,7 +773,11 @@ const AuthorRow = memo(function AuthorRowInner({
           )}
         </div>
 
-        <OrcidLine author={author} rowLocked={rowLocked} line={orcidLine} onPaste={handleSmartPaste} />
+        {isPerson(author) ? (
+          <OrcidLine author={author} rowLocked={rowLocked} line={orcidLine} onPaste={handleSmartPaste} />
+        ) : (
+          <GroupFields group={author} rowLocked={rowLocked} />
+        )}
       </div>
     </li>
   );

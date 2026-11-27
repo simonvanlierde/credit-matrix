@@ -5,8 +5,8 @@ import { LevelMark } from "@/components/ui/level-mark";
 import {
   ASK_TARGETS,
   type Ask,
-  type Author,
   type Choice,
+  type Contributor,
   CREDIT_ROLES,
   type Difference,
   isMarker,
@@ -38,7 +38,7 @@ type Line =
   | { target: Target; state: "used"; level: Level };
 
 /** Every difference in one answer, open or decided, in `ASK_TARGETS` order. */
-function linesOf(author: Author, ask: Ask, reply: Reply): Line[] {
+function linesOf(author: Contributor, ask: Ask, reply: Reply): Line[] {
   const { byTarget, open } = review(author, ask);
   const lines: Line[] = [];
   for (const target of ASK_TARGETS) {
@@ -130,7 +130,7 @@ export function ReviewPanel() {
     );
   }
 
-  const firstName = (author: Author) => author.firstName || author.name;
+  const firstName = (author: Contributor) => author.firstName || author.name;
   const targetName = (target: Target) =>
     target === "equalContribution"
       ? t("markerSharedFirst")
@@ -145,7 +145,7 @@ export function ReviewPanel() {
         : t("markerNo")
       : translateInterfaceUi(graded || level === "none" ? level : "contributed");
 
-  function highlight(author: Author, target: Target | null) {
+  function highlight(author: Contributor, target: Target | null) {
     const store = useContributionStore.getState();
     if (!target) {
       store.setReviewHighlight(null);
@@ -161,7 +161,7 @@ export function ReviewPanel() {
     });
   }
 
-  function choose(author: Author, targets: Target[], choice: Choice, key: string) {
+  function choose(author: Contributor, targets: Target[], choice: Choice, key: string) {
     const store = useContributionStore.getState();
     const { outcome } = store.applyAskStep(store.activeDraftId, {
       kind: "settle",
@@ -189,7 +189,7 @@ export function ReviewPanel() {
   }
 
   /** Clear one line's decision; a "theirs" also puts the row's own value back. */
-  function undo(author: Author, target: Target, key: string) {
+  function undo(author: Contributor, target: Target, key: string) {
     const store = useContributionStore.getState();
     const { outcome } = store.applyAskStep(store.activeDraftId, {
       kind: "settle",
@@ -201,7 +201,7 @@ export function ReviewPanel() {
     pendingFocus.current = { key, stay: true };
   }
 
-  async function askAbout(author: Author, target: Target, key: string) {
+  async function askAbout(author: Contributor, target: Target, key: string) {
     if (!(await copyAskMessage(author, t, { role: targetName(target) }))) return;
     setCopiedKey(key);
     // Same 2s window as useCopyStatus, so "Copied" never outlives the copy.

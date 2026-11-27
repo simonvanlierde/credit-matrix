@@ -14,7 +14,7 @@
  * every load. A tab never writes over a value stamped with a newer version; it
  * reloads to pick up the newer build instead.
  */
-export const PERSIST_VERSION = 6;
+export const PERSIST_VERSION = 7;
 
 /** localStorage key the store persists under. */
 export const PERSIST_KEY = "credit-generator-state";

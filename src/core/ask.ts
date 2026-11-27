@@ -1,10 +1,10 @@
 import * as z from "zod/mini";
-import type { Author, Contribution, ContributionLevel } from "./author";
-import { AuthorSchema, ContributionSchema, scoreToLevel } from "./author";
+import type { Contribution, ContributionLevel, Contributor, Person } from "./author";
+import { ContributionSchema, ContributorSchema, isPerson, orcidOf, scoreToLevel } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
 import { type OrcidKey, type OrcidProof, OrcidProofSchema, verifyOrcidToken } from "./orcid-proof";
-import { buildInitials, createAuthor, deduplicateAuthorInitials } from "./parse-authors";
+import { buildInitials, createAuthor, createGroup, deduplicateAuthorInitials, groupInitials } from "./parse-authors";
 import { fromSharePayload } from "./share-payload";
 
 /** What a reply answers: each role, and the two markers outside CRediT. */
@@ -79,7 +79,7 @@ export const AskSchema = /* @__PURE__ */ (() =>
 export type Ask = z.infer<typeof AskSchema>;
 
 export interface AskState {
-  authors: readonly Author[];
+  authors: readonly Contributor[];
   asks: Readonly<Record<string, Ask>>;
 }
 
@@ -89,7 +89,7 @@ export interface AskState {
  * identity fields and leaves scores edited since then alone. `null` deletes an ask.
  */
 export interface Patch {
-  rows: Record<string, Partial<Author>>;
+  rows: Record<string, Partial<Person>>;
   asks: Record<string, Ask | null>;
 }
 
@@ -129,10 +129,15 @@ export interface Review {
   open: Difference[];
 }
 
-type Answer = Pick<Author, "contributions" | "equalContribution" | "corresponding">;
+/** A group row has no markers, so it answers with its roles only. */
+type Answer = Pick<Person, "contributions"> & Partial<Pick<Person, "equalContribution" | "corresponding">>;
 
 // The name parts are derived from the name, so they only follow it (see applyPatch).
-const IDENTITY = ["name", "orcid", "contributorType"] as const;
+const PERSON_IDENTITY = ["name", "orcid", "contributorType"] as const;
+const GROUP_IDENTITY = ["name", "contributorType"] as const;
+/** The markers a row carries: a group has none. */
+const markersOf = (row: Contributor) =>
+  isPerson(row) ? { equalContribution: row.equalContribution, corresponding: row.corresponding } : {};
 
 const emptyPatch = (): Patch => ({ rows: {}, asks: {} });
 const nothing = (kind: "unmatched" | "broken" | "stale" | "noReply") => ({
@@ -142,7 +147,7 @@ const nothing = (kind: "unmatched" | "broken" | "stale" | "noReply") => ({
 });
 
 function scoreOf(answer: Answer, role: CreditRoleName): number {
-  // An imported row may repeat a role; the highest score is the one that counts (see AuthorSchema).
+  // An imported row may repeat a role; the highest score is the one that counts (see ContributorSchema).
   let score = 0;
   for (const contribution of answer.contributions)
     if (contribution.role === role) score = Math.max(score, contribution.score);
@@ -158,11 +163,11 @@ const isUnset = (level: Level) => level === "none" || level === false;
 
 function sameAnswer(a: Answer, b: Answer): boolean {
   return ASK_TARGETS.every((target) =>
-    isMarker(target) ? a[target] === b[target] : scoreOf(a, target) === scoreOf(b, target),
+    isMarker(target) ? (a[target] === true) === (b[target] === true) : scoreOf(a, target) === scoreOf(b, target),
   );
 }
 
-const reviews = new WeakMap<Author, WeakMap<object, Review>>();
+const reviews = new WeakMap<Contributor, WeakMap<object, Review>>();
 const NO_ASK = {};
 
 /**
@@ -170,7 +175,7 @@ const NO_ASK = {};
  * ask. Cached per (author, ask) object pair, so state must be replaced, never
  * mutated in place.
  */
-export function review(author: Author, ask?: Ask): Review {
+export function review(author: Contributor, ask?: Ask): Review {
   let byAsk = reviews.get(author);
   if (!byAsk) {
     byAsk = new WeakMap();
@@ -183,7 +188,7 @@ export function review(author: Author, ask?: Ask): Review {
   return result;
 }
 
-function computeReview(author: Author, ask?: Ask): Review {
+function computeReview(author: Contributor, ask?: Ask): Review {
   if (!ask) return { status: { kind: "none" }, byTarget: {}, open: [] };
   const reply = ask.reply;
   if (!reply) return { status: { kind: "asked", prefilled: ask.prefilled }, byTarget: {}, open: [] };
@@ -233,28 +238,27 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
     }
 
     case "reply": {
-      const parsed = AuthorSchema.safeParse(event.row);
+      const parsed = ContributorSchema.safeParse(event.row);
       if (!parsed.success || parsed.data.id !== id) return nothing("broken");
       if (!author) return nothing("unmatched");
       const row = parsed.data;
+      // A reply to a group answers as that group; a person's row cannot stand in for it.
+      if (row.kind !== author.kind) return nothing("broken");
       // A link from before send times were recorded counts as sent when opened.
       // A link cannot have been sent after it arrived; a hand-edited future `w`
       // would otherwise make every later reply to this ask look stale.
       const sentAt = Math.min(event.sentAt ?? event.at, event.at);
-      const answer: Answer = {
-        contributions: row.contributions,
-        equalContribution: row.equalContribution,
-        corresponding: row.corresponding,
-      };
-      const identity: Partial<Author> = {};
-      const previous: Partial<Author> = {};
-      for (const field of IDENTITY) {
-        if (row[field] === author[field]) continue;
-        Object.assign(identity, { [field]: row[field] });
-        Object.assign(previous, { [field]: author[field] });
+      const answer: Answer = { contributions: row.contributions, ...markersOf(row) };
+      const identity: Partial<Person> = {};
+      const previous: Partial<Person> = {};
+      for (const field of isPerson(author) ? PERSON_IDENTITY : GROUP_IDENTITY) {
+        const [now, was] = [row, author].map((x) => (x as unknown as Record<string, unknown>)[field]);
+        if (now === was) continue;
+        Object.assign(identity, { [field]: now });
+        Object.assign(previous, { [field]: was });
       }
       // Undoing a rename puts back the parts too: re-parsing cannot recover a structured surname.
-      if (identity.name !== undefined) {
+      if (identity.name !== undefined && isPerson(author)) {
         Object.assign(previous, {
           firstName: author.firstName,
           middleName: author.middleName,
@@ -288,6 +292,8 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       // A changed answer starts with no decisions, so a renewed objection shows again.
       const reply: Reply = {
         ...answer,
+        equalContribution: answer.equalContribution === true,
+        corresponding: answer.corresponding === true,
         sentAt,
         receivedAt: event.at,
         ...(Object.keys(provenance).length > 0 ? { provenance } : {}),
@@ -296,7 +302,11 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       // A reply with no recorded ask (asked before asks were kept, or the ask was undone): every such ask was pre-filled.
       const ask: Ask = { ...(held ?? { sentAt: 0, prefilled: true }), reply };
       return {
-        outcome: { kind: "received", open: review({ ...author, ...identity }, ask).open.length, duplicate: false },
+        outcome: {
+          kind: "received",
+          open: review({ ...author, ...identity } as Contributor, ask).open.length,
+          duplicate: false,
+        },
         patch: { rows: changed ? { [id]: identity } : {}, asks: { [id]: ask } },
         undo: { rows: changed ? { [id]: previous } : {}, asks: { [id]: held ?? null } },
       };
@@ -324,8 +334,7 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
 
       const next: Answer = {
         contributions: author.contributions.map((contribution) => ({ ...contribution })),
-        equalContribution: author.equalContribution,
-        corresponding: author.corresponding,
+        ...markersOf(author),
       };
       const decisions = { ...reply.decisions };
       for (const [target, choice] of picks) {
@@ -350,16 +359,12 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       const ask: Ask = { ...held, reply: { ...reply, decisions } };
       const rowChanged = !sameAnswer(author, next);
       return {
-        outcome: { kind: "settled", open: review({ ...author, ...next }, ask).open.length },
+        outcome: { kind: "settled", open: review({ ...author, ...next } as Contributor, ask).open.length },
         patch: { rows: rowChanged ? { [id]: next } : {}, asks: { [id]: ask } },
         undo: {
           rows: rowChanged
             ? {
-                [id]: {
-                  contributions: author.contributions,
-                  equalContribution: author.equalContribution,
-                  corresponding: author.corresponding,
-                },
+                [id]: { contributions: author.contributions, ...markersOf(author) },
               }
             : {},
           asks: { [id]: held },
@@ -464,9 +469,10 @@ export function applyPatch(state: AskState, patch: Patch): AskState {
       : state.authors.map((author) => {
           const fields = patch.rows[author.id];
           if (!fields) return author;
-          const merged = { ...author, ...fields };
+          const merged = { ...author, ...fields } as Contributor;
           if (fields.name === undefined || fields.name === author.name) return merged;
           renamed = true;
+          if (!isPerson(merged)) return createGroup(merged.name, merged);
           const { firstName, middleName, surname } = fields;
           return createAuthor(merged.name, { ...merged, firstName, middleName, surname });
         });
@@ -480,15 +486,17 @@ export function applyPatch(state: AskState, patch: Patch): AskState {
 }
 
 /** Initials from scratch across the roster, as normalizing does, keeping each row whose initials hold. */
-function rederiveInitials(authors: readonly Author[]): Author[] {
+function rederiveInitials(authors: readonly Contributor[]): Contributor[] {
   const fresh = deduplicateAuthorInitials(
     authors.map((author) => ({
       ...author,
-      initials: buildInitials(author.name, author.firstName, author.middleName, author.surname),
+      initials: isPerson(author)
+        ? buildInitials(author.name, author.firstName, author.middleName, author.surname)
+        : groupInitials(author.name, author.alias),
     })),
   );
   return fresh.map((author, index) => {
-    const before = authors[index] as Author;
+    const before = authors[index] as Contributor;
     return author.initials === before.initials ? before : author;
   });
 }
@@ -506,9 +514,9 @@ function rederiveInitials(authors: readonly Author[]): Author[] {
  * lands on.
  */
 export function importAnswers(
-  current: readonly Author[],
-  incoming: readonly Author[],
-  mapped: readonly Author[],
+  current: readonly Contributor[],
+  incoming: readonly Contributor[],
+  mapped: readonly Contributor[],
   held: Readonly<Record<string, Ask>>,
   fromFile: { asks?: Readonly<Record<string, Ask>>; selfId?: string },
 ): { asks: Record<string, Ask> | undefined; selfId: string | undefined } {
@@ -537,7 +545,7 @@ export function importAnswers(
 }
 
 /** The filed ask with `signedElsewhere` worked out again for the file row and the row it lands on. */
-function flagSignIn(ask: Ask, fileRow: Author, landing: Author): Ask {
+function flagSignIn(ask: Ask, fileRow: Contributor, landing: Contributor): Ask {
   const provenance = ask.reply?.provenance;
   if (!(ask.reply && provenance)) return ask;
   const { signedElsewhere: _, ...rest } = provenance;
@@ -551,11 +559,11 @@ function flagSignIn(ask: Ask, fileRow: Author, landing: Author): Ask {
  * another one. The draft id is not compared: an honest export restored
  * elsewhere opens a new draft.
  */
-function signedHere(proof: OrcidProof, fileRow: Author, landing: Author): boolean {
+function signedHere(proof: OrcidProof, fileRow: Contributor, landing: Contributor): boolean {
   try {
     const shared = fromSharePayload(proof.payload);
     const row = shared.authors.find((author) => author.id === shared.claimId);
-    return row !== undefined && row.id === fileRow.id && row.name === landing.name && row.orcid === landing.orcid;
+    return row !== undefined && row.id === fileRow.id && row.name === landing.name && orcidOf(row) === orcidOf(landing);
   } catch {
     return false;
   }

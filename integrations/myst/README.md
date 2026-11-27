@@ -140,6 +140,8 @@ The SVG assets embed fonts and keep editable text. For PDF and Word, see
 
 ## Limitations
 
+- A consortium is an author whose `name` is the group's name (`The COVIDSurg Collaborative`); the
+  statement prints it as written. Aliases and members are not read.
 - MyST passes plugins no front matter, so the plugin reads `myst.yml` and the page's own Markdown
   front matter from disk. A notebook page uses the project's authors.
 - An author listed only by `id` in a page is not looked up in the project's list.

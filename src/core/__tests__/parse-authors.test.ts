@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "../author";
 import {
   buildInitials,
@@ -507,7 +507,7 @@ describe("splitNameList comma pairs", () => {
 });
 
 describe("normalizeRoster name parts", () => {
-  const rebuilt = (author: Author) => {
+  const rebuilt = (author: Contributor) => {
     const [row] = normalizeRoster([author]);
     return row && { firstName: row.firstName, middleName: row.middleName, surname: row.surname };
   };
@@ -561,7 +561,11 @@ describe("normalizeRoster name parts", () => {
       middleName: undefined,
       surname: undefined,
     };
-    expect(rebuilt(old as unknown as Author)).toEqual({ firstName: "Grace", middleName: "Ann", surname: "Hopper" });
+    expect(rebuilt(old as unknown as Contributor)).toEqual({
+      firstName: "Grace",
+      middleName: "Ann",
+      surname: "Hopper",
+    });
   });
 
   it("fills in the roles a stored row is missing", () => {

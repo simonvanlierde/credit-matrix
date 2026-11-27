@@ -1,5 +1,5 @@
 import {
-  type Author,
+  type Contributor,
   toCrossrefContributors,
   toCsv,
   toJats4rXml,
@@ -83,7 +83,7 @@ export type DataExportOptions = NonNullable<Parameters<typeof toJson>[1]> & {
 };
 
 export function serializeDataExport(
-  authors: Author[],
+  authors: Contributor[],
   dataFormat: DataFormat,
   {
     asks,

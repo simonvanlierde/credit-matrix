@@ -2,7 +2,7 @@ import { Check, Copy, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";
 import { InitialsChip } from "@/components/ui/initials-chip";
-import { type Author, review, settledAt } from "@/core";
+import { type Contributor, review, settledAt } from "@/core";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
 import { useFormatter, useTranslations } from "@/lib/translations";
@@ -70,7 +70,7 @@ export function TeamPanel() {
   // Nobody left to copy: the queue is over, not stuck on a missing name.
   if (live && live.ids.length <= live.done) setQueue(null);
 
-  function statusOf(author: Author): { text: string; toReview: boolean } {
+  function statusOf(author: Contributor): { text: string; toReview: boolean } {
     const ask = asks[author.id];
     if (!ask) return { text: t("teamNotAsked"), toReview: false };
     const { status } = review(author, ask);
@@ -91,7 +91,7 @@ export function TeamPanel() {
   }
 
   /** Copy one person's message and record the ask. Returns whether it reached the clipboard. */
-  async function copyMessage(author: Author): Promise<boolean> {
+  async function copyMessage(author: Contributor): Promise<boolean> {
     if (!(await copyAskMessage(author, t))) return false;
     setCopied({ id: author.id, name: author.name });
     setFinished(null);

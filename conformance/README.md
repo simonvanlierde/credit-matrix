@@ -22,6 +22,7 @@ Each case is two files in [`cases/`](cases/) with the same name:
 | `06-non-author` | Someone credited in the acknowledgements: `contrib-type="contributor"`. |
 | `07-orcid` | ORCID iDs, given bare or as a URL, written as the full `https://orcid.org/` URI. |
 | `08-non-ascii-names` | Accented, Vietnamese and Chinese names, a multi-word surname, an apostrophe. |
+| `09-group` | A consortium with named members: `<collab>` holding a nested `<contrib-group>`, roles on the `<contrib>`. |
 
 ## The input format
 
@@ -50,6 +51,8 @@ Each case is two files in [`cases/`](cases/) with the same name:
   not done.
 - `type` is `"author"` (the default) or `"non-author"`.
 - `orcid`, `equalContribution` and `corresponding` are optional.
+- A consortium has `group` (its name) and optional `members` (names) in place of `givenNames` and
+  `surname`; `roles` and `type` work as for a person.
 - Contributors are in author order.
 
 ## What the expected output says

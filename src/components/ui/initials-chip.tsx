@@ -1,4 +1,4 @@
-import type { Author } from "@/core";
+import type { Contributor } from "@/core";
 import { useContributorHue } from "@/lib/use-contributor-hue";
 
 /**
@@ -7,7 +7,7 @@ import { useContributorHue } from "@/lib/use-contributor-hue";
  * both said "A L, Ada Lovelace". With colour by contributor on, the badge is
  * filled in that person's hue, the same one their grid column uses.
  */
-export function InitialsChip({ author }: { author: Author }) {
+export function InitialsChip({ author }: { author: Contributor }) {
   const hue = useContributorHue(author.id);
   return (
     <span

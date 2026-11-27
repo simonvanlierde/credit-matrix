@@ -102,7 +102,7 @@ export declare class CreditMatrixElement extends HTMLElement {
   render(): Promise<void>;
 }
 // figures.d.ts
-import { a as Author, n as HeatmapSvgOptions } from "./heatmap-svg.js";
+import { n as HeatmapSvgOptions, u as Contributor } from "./heatmap-svg.js";
 /**
  * A figure font face: Latin, Japanese, Simplified Chinese and the other scripts in sans and serif (Korean
  * in sans only), and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays
@@ -154,9 +154,9 @@ export interface FigureSvgOptions extends FigureOptions {
   fallback?: "system" | "error";
 }
 export interface FigureRenderer {
-  svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
+  svg(authors: Contributor[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
-  pdf(authors: Author[], options?: FigureOptions, widthMm?: number): Promise<Uint8Array>;
+  pdf(authors: Contributor[], options?: FigureOptions, widthMm?: number): Promise<Uint8Array>;
 }
 /** The file a `font` family was found in, reported once per renderer and family. */
 export interface FigureFontReport {
@@ -235,7 +235,14 @@ declare function normalizeOrcid(id: string): string;
  * Accepts any form `normalizeOrcid` reads; store its result, not the input.
  */
 declare function isValidOrcid(id: string): boolean;
-declare const AuthorSchema: z.ZodMiniObject<{
+/** Most members one group lists; a consortium paper can name thousands. */
+declare const MAX_GROUP_MEMBERS = 5000;
+/** The bare nine-character ROR id from what people paste: the ror.org address or the id alone. */
+declare function normalizeRor(id: string): string;
+/** A ROR id with the right shape and checksum (98 minus the base-32 body times 100, mod 97). No lookup. */
+declare function isValidRor(id: string): boolean;
+declare const PersonSchema: z.ZodMiniObject<{
+  kind: z.ZodMiniDefault<z.ZodMiniLiteral<"person">>;
   id: z.ZodMiniDefault<z.ZodMiniString<string>>;
   name: z.ZodMiniString<string>;
   firstName: z.ZodMiniString<string>;
@@ -269,9 +276,194 @@ declare const AuthorSchema: z.ZodMiniObject<{
   equalContribution: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
   corresponding: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
 }, z.core.$strip>;
-type Author = z.infer<typeof AuthorSchema>;
+/** A group member: a name, optionally tied to a person row of the same draft. */
+declare const MemberSchema: z.ZodMiniObject<{
+  name: z.ZodMiniString<string>;
+  personId: z.ZodMiniOptional<z.ZodMiniString<string>>;
+}, z.core.$strip>;
+/**
+ * A consortium or collaborative credited as one contributor ("COVIDSurg Collaborative").
+ * It has no ORCID, never corresponds, and cannot be the signed-in or claimed row.
+ */
+declare const GroupSchema: z.ZodMiniObject<{
+  kind: z.ZodMiniLiteral<"group">;
+  id: z.ZodMiniDefault<z.ZodMiniString<string>>;
+  name: z.ZodMiniString<string>;
+  initials: z.ZodMiniString<string>;
+  contributorType: z.ZodMiniDefault<z.ZodMiniEnum<{
+    author: "author";
+    "non-author": "non-author";
+  }>>;
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  alias: z.ZodMiniOptional<z.ZodMiniString<string>>;
+  ror: z.ZodMiniOptional<z.ZodMiniPipe<z.ZodMiniString<string>, z.ZodMiniTransform<string, string>>>;
+  members: z.ZodMiniDefault<z.ZodMiniArray<z.ZodMiniObject<{
+    name: z.ZodMiniString<string>;
+    personId: z.ZodMiniOptional<z.ZodMiniString<string>>;
+  }, z.core.$strip>>>;
+  membersAre: z.ZodMiniDefault<z.ZodMiniEnum<{
+    authors: "authors";
+    collaborators: "collaborators";
+  }>>;
+  contactId: z.ZodMiniOptional<z.ZodMiniString<string>>;
+}, z.core.$strip>;
+/** One row of the contributor list. */
+declare const ContributorSchema: z.ZodMiniDiscriminatedUnion<[z.ZodMiniObject<{
+  kind: z.ZodMiniDefault<z.ZodMiniLiteral<"person">>;
+  id: z.ZodMiniDefault<z.ZodMiniString<string>>;
+  name: z.ZodMiniString<string>;
+  firstName: z.ZodMiniString<string>;
+  middleName: z.ZodMiniString<string>;
+  surname: z.ZodMiniString<string>;
+  initials: z.ZodMiniString<string>;
+  orcid: z.ZodMiniOptional<z.ZodMiniPipe<z.ZodMiniString<string>, z.ZodMiniTransform<string, string>>>;
+  contributorType: z.ZodMiniDefault<z.ZodMiniEnum<{
+    author: "author";
+    "non-author": "non-author";
+  }>>;
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  equalContribution: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+  corresponding: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+}, z.core.$strip>, z.ZodMiniObject<{
+  kind: z.ZodMiniLiteral<"group">;
+  id: z.ZodMiniDefault<z.ZodMiniString<string>>;
+  name: z.ZodMiniString<string>;
+  initials: z.ZodMiniString<string>;
+  contributorType: z.ZodMiniDefault<z.ZodMiniEnum<{
+    author: "author";
+    "non-author": "non-author";
+  }>>;
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  alias: z.ZodMiniOptional<z.ZodMiniString<string>>;
+  ror: z.ZodMiniOptional<z.ZodMiniPipe<z.ZodMiniString<string>, z.ZodMiniTransform<string, string>>>;
+  members: z.ZodMiniDefault<z.ZodMiniArray<z.ZodMiniObject<{
+    name: z.ZodMiniString<string>;
+    personId: z.ZodMiniOptional<z.ZodMiniString<string>>;
+  }, z.core.$strip>>>;
+  membersAre: z.ZodMiniDefault<z.ZodMiniEnum<{
+    authors: "authors";
+    collaborators: "collaborators";
+  }>>;
+  contactId: z.ZodMiniOptional<z.ZodMiniString<string>>;
+}, z.core.$strip>], "kind">;
+type Person = z.infer<typeof PersonSchema>;
+/** @deprecated Use Person (or Contributor for a row that may be a group). */
+type Author = Person;
+/** @deprecated Use PersonSchema (or ContributorSchema for a row that may be a group). */
+declare const AuthorSchema: z.ZodMiniObject<{
+  kind: z.ZodMiniDefault<z.ZodMiniLiteral<"person">>;
+  id: z.ZodMiniDefault<z.ZodMiniString<string>>;
+  name: z.ZodMiniString<string>;
+  firstName: z.ZodMiniString<string>;
+  middleName: z.ZodMiniString<string>;
+  surname: z.ZodMiniString<string>;
+  initials: z.ZodMiniString<string>;
+  orcid: z.ZodMiniOptional<z.ZodMiniPipe<z.ZodMiniString<string>, z.ZodMiniTransform<string, string>>>;
+  contributorType: z.ZodMiniDefault<z.ZodMiniEnum<{
+    author: "author";
+    "non-author": "non-author";
+  }>>;
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  equalContribution: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+  corresponding: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+}, z.core.$strip>;
+/**
+ * The person-only fields, typed as always absent on a group, so `row.orcid` or `row.corresponding`
+ * reads as `undefined` on any contributor without a `kind` check. The schema strips them from a group.
+ */
+interface PersonOnly {
+  readonly orcid?: undefined;
+  readonly firstName?: undefined;
+  readonly middleName?: undefined;
+  readonly surname?: undefined;
+  readonly equalContribution?: undefined;
+  readonly corresponding?: undefined;
+}
+type Group = z.infer<typeof GroupSchema> & PersonOnly;
+type Member = z.infer<typeof MemberSchema>;
+type Contributor = Person | Group;
+/** True for a person row; groups have no ORCID, name parts or corresponding flag. */
+declare function isPerson(contributor: Contributor): contributor is Person;
+/** The name a chip row or figure label shows: a group's alias when it has one, else the name. */
+declare function shortName(contributor: Contributor): string;
+/** The ORCID iD of a row; a group has none. */
+declare function orcidOf(contributor: Contributor): string | undefined;
+/** True for a group row. */
+declare function isGroup(contributor: Contributor): contributor is Group;
 /** Author (named on the byline) vs. non-author contributor (Acknowledgements). */
-type ContributorType = Author["contributorType"];
+type ContributorType = Contributor["contributorType"];
 /**
  * Contribution level derived from a 0-100 score, using NISO's optional
  * degree-of-contribution terms (lead / equal / supporting).
@@ -345,7 +537,7 @@ interface HeatmapSvgOptions {
  * same language and with the same levels as the figure. The SVG stores it as
  * `<desc>`; a PNG export can store it as a Description text chunk.
  */
-declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string;
+declare function heatmapDescription(authors: Contributor[], opts?: HeatmapSvgOptions): string;
 /**
  * Render a contribution heatmap as a self-contained SVG string.
  *
@@ -362,13 +554,13 @@ declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions)
  * alternative: the by-author contribution statement, so a screen reader hears
  * who did what. Assistive technology reads both and nothing draws them.
  */
-declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
-export { Author as a, ContributionLevel as c, MAX_AUTHORS as d, MAX_AUTHOR_NAME_LENGTH as f, scoreToLevel as g, normalizeOrcid as h, heatmapDescription as i, ContributionSchema as l, isValidOrcid as m, HeatmapSvgOptions as n, AuthorSchema as o, MAX_IMPORT_BYTES as p, buildHeatmapSvg as r, Contribution as s, HeatmapOptionError as t, ContributorType as u };
+declare function buildHeatmapSvg(authors: Contributor[], opts?: HeatmapSvgOptions): string;
+export { scoreToLevel as A, isGroup as C, normalizeOrcid as D, isValidRor as E, normalizeRor as O, PersonSchema as S, isValidOrcid as T, MAX_GROUP_MEMBERS as _, Author as a, MemberSchema as b, ContributionLevel as c, ContributorSchema as d, ContributorType as f, MAX_AUTHOR_NAME_LENGTH as g, MAX_AUTHORS as h, heatmapDescription as i, shortName as j, orcidOf as k, ContributionSchema as l, GroupSchema as m, HeatmapSvgOptions as n, AuthorSchema as o, Group as p, buildHeatmapSvg as r, Contribution as s, HeatmapOptionError as t, Contributor as u, MAX_IMPORT_BYTES as v, isPerson as w, Person as x, Member as y };
 // i18n.d.ts
 import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
 export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
 // index.d.ts
-import { a as Author, c as ContributionLevel, d as MAX_AUTHORS, f as MAX_AUTHOR_NAME_LENGTH, g as scoreToLevel, h as normalizeOrcid, i as heatmapDescription, l as ContributionSchema, m as isValidOrcid, n as HeatmapSvgOptions, o as AuthorSchema, p as MAX_IMPORT_BYTES, r as buildHeatmapSvg, s as Contribution, t as HeatmapOptionError, u as ContributorType } from "./heatmap-svg.js";
+import { A as scoreToLevel, C as isGroup, D as normalizeOrcid, E as isValidRor, O as normalizeRor, S as PersonSchema, T as isValidOrcid, _ as MAX_GROUP_MEMBERS, a as Author, b as MemberSchema, c as ContributionLevel, d as ContributorSchema, f as ContributorType, g as MAX_AUTHOR_NAME_LENGTH, h as MAX_AUTHORS, i as heatmapDescription, j as shortName, k as orcidOf, l as ContributionSchema, m as GroupSchema, n as HeatmapSvgOptions, o as AuthorSchema, p as Group, r as buildHeatmapSvg, s as Contribution, t as HeatmapOptionError, u as Contributor, v as MAX_IMPORT_BYTES, w as isPerson, x as Person, y as Member } from "./heatmap-svg.js";
 import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
@@ -972,7 +1164,7 @@ export declare const AskSchema: z.ZodMiniObject<{
 }, z.core.$loose>;
 type Ask = z.infer<typeof AskSchema>;
 interface AskState {
-  authors: readonly Author[];
+  authors: readonly Contributor[];
   asks: Readonly<Record<string, Ask>>;
 }
 /**
@@ -981,7 +1173,7 @@ interface AskState {
  * identity fields and leaves scores edited since then alone. `null` deletes an ask.
  */
 interface Patch {
-  rows: Record<string, Partial<Author>>;
+  rows: Record<string, Partial<Person>>;
   asks: Record<string, Ask | null>;
 }
 type AskEvent = {
@@ -1048,7 +1240,8 @@ interface Review {
   /** The differences still waiting for a decision, in `ASK_TARGETS` order. */
   open: Difference[];
 }
-type Answer = Pick<Author, "contributions" | "equalContribution" | "corresponding">;
+/** A group row has no markers, so it answers with its roles only. */
+type Answer = Pick<Person, "contributions"> & Partial<Pick<Person, "equalContribution" | "corresponding">>;
 /** A role's level, or whether a marker is set, as a row or a reply holds it. */
 export declare function levelOf(answer: Answer, target: Target): Level;
 /**
@@ -1056,7 +1249,7 @@ export declare function levelOf(answer: Answer, target: Target): Level;
  * ask. Cached per (author, ask) object pair, so state must be replaced, never
  * mutated in place.
  */
-export declare function review(author: Author, ask?: Ask): Review;
+export declare function review(author: Contributor, ask?: Ask): Review;
 /**
  * Every change to asks and replies. Pure: time comes in on the event. Never
  * throws on outside input; a `reply` event's row is untrusted.
@@ -1098,7 +1291,7 @@ export declare function applyPatch(state: AskState, patch: Patch): AskState;
  * another row id than the file row's, or another name or iD than the row it
  * lands on.
  */
-export declare function importAnswers(current: readonly Author[], incoming: readonly Author[], mapped: readonly Author[], held: Readonly<Record<string, Ask>>, fromFile: {
+export declare function importAnswers(current: readonly Contributor[], incoming: readonly Contributor[], mapped: readonly Contributor[], held: Readonly<Record<string, Ask>>, fromFile: {
   asks?: Readonly<Record<string, Ask>>;
   selfId?: string;
 }): {
@@ -1106,9 +1299,12 @@ export declare function importAnswers(current: readonly Author[], incoming: read
   selfId: string | undefined;
 };
 interface CodemetaPerson {
-  type: "Person";
+  /** A group is an `Organization`. */
+  type: "Person" | "Organization";
   id: string;
   name: string;
+  /** A group's alias. */
+  alternateName?: string;
   givenName?: string;
   familyName?: string;
 }
@@ -1125,21 +1321,33 @@ interface CodemetaAttribution {
 }
 /**
  * Export people with active contributions and their linked CRediT roles.
+ * A group is an `Organization` with its alias as `alternateName` and its ROR URL as `id`.
  * Non-authors go in contributor. Without an ORCID, a roster-position fragment
  * links the person only within this document; it is not a persistent identity.
  * Merge the returned fields into the work's CodeMeta record. Keep native JSON
  * for scores, contribution levels, equal contribution and correspondence.
  */
-export declare function toCodemeta(authors: Author[]): {
+export declare function toCodemeta(authors: Contributor[]): {
   metadata: CodemetaAttribution;
   warnings: string[];
 };
 /** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
 interface XmlElement {
   readonly textContent: string | null;
+  /** Browser and linkedom elements have both. Without `localName` a Crossref `<organization>` reads as nothing. */
+  readonly localName?: string;
+  /** A group's name is the text of its `<collab>` outside the member list. */
+  readonly childNodes?: ArrayLike<XmlNode>;
   getAttribute(name: string): string | null;
   querySelector(selectors: string): XmlElement | null;
   querySelectorAll(selectors: string): ArrayLike<XmlElement>;
+}
+/** A DOM node: text is `nodeType` 3, an element 1. */
+interface XmlNode {
+  readonly nodeType: number;
+  readonly textContent: string | null;
+  readonly localName?: string;
+  readonly childNodes?: ArrayLike<XmlNode>;
 }
 /** A `DOMParser`: the browser's own, or linkedom's in Node. */
 interface XmlParser {
@@ -1152,7 +1360,7 @@ interface XmlParser {
  */
 export declare function fromJats4rXml(xmlString: string, { parser }?: {
   parser?: XmlParser;
-}): Author[];
+}): Contributor[];
 /** Text that is not well-formed XML, such as a truncated file. */
 export declare class XmlParseError extends Error {
   name: string;
@@ -1167,8 +1375,10 @@ export declare class XmlParseError extends Error {
  * marked `authenticated`: only the depositing member can vouch for that.
  * Authors come first, then the others, each in roster order. A row still named
  * after its ORCID iD has no name to deposit, so it is left out with a comment.
+ * A group is an `<organization>`: Crossref gives it no CRediT roles and no "other" role, so its roles
+ * are dropped with a comment, and a group credited only in the Acknowledgements is left out with one.
  */
-export declare function toCrossrefContributors(authors: Author[]): string;
+export declare function toCrossrefContributors(authors: Contributor[]): string;
 /**
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
@@ -1178,7 +1388,7 @@ export declare function toCrossrefContributors(authors: Author[]): string;
  */
 export declare function fromCrossrefContributors(xml: string, { parser }?: {
   parser?: XmlParser;
-}): Author[];
+}): Contributor[];
 /** A score cell that is not a number, a level or yes/no. `row` counts the header as row 1, as a spreadsheet does. */
 export declare class ScoreCellError extends Error {
   readonly row: number;
@@ -1186,21 +1396,21 @@ export declare class ScoreCellError extends Error {
   readonly value: string;
   constructor(row: number, column: string, value: string);
 }
-export declare function toCsv(authors: Author[]): string;
+export declare function toCsv(authors: Contributor[]): string;
 /** Read people from a CSV, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
-export declare function fromCsv(csv: string): Author[];
+export declare function fromCsv(csv: string): Contributor[];
 /**
  * YAML for Quarto/Pandoc's `author` field, with canonical CRediT names and levels.
  * `yesNo` writes role names without degrees. Non-authors are omitted, never added to the byline.
  */
-export declare function toQuarto(authors: Author[], { yesNo }?: {
+export declare function toQuarto(authors: Contributor[], { yesNo }?: {
   yesNo?: boolean;
 }): string;
 /**
  * YAML for MyST's `authors` field. Paste under `project` in myst.yml or into page front matter.
  * MyST has no contribution levels. Non-authors are omitted, never added to the byline.
  */
-export declare function toMyst(authors: Author[]): string;
+export declare function toMyst(authors: Contributor[]): string;
 /**
  * A warning when a heatmap scaled to fit a full journal page prints its smallest label under 6 pt,
  * or null. The CLI writes it to stderr and the document plugins show it as a
@@ -1226,7 +1436,7 @@ export declare class RepeatedIdError extends Error {
  * while it names a contributor in the file. Throws a ZodError when two authors
  * share an id.
  */
-export declare function toJson(authors: Author[], { asks, includeAnswers, selfId, toolchain }?: {
+export declare function toJson(authors: Contributor[], { asks, includeAnswers, selfId, toolchain }?: {
   asks?: Readonly<Record<string, Ask>>;
   includeAnswers?: boolean;
   selfId?: string | null;
@@ -1239,7 +1449,7 @@ export declare function toJson(authors: Author[], { asks, includeAnswers, selfId
  * A toolchain this build does not know is left out, with a line saying so in `warnings`.
  */
 export declare function fromJson(json: string): {
-  authors: Author[];
+  authors: Contributor[];
   asks?: Record<string, Ask>;
   selfId?: string;
   toolchain?: Toolchain;
@@ -1254,7 +1464,7 @@ export declare function fromJson(json: string): {
  * With `yesNo` (the Yes/No input mode) every role is 1 or 0.
  * With no author roles there is no `\credit` line, only a comment: credits.sty fails on none.
  */
-export declare function toLatexCredits(authors: Author[], { yesNo }?: {
+export declare function toLatexCredits(authors: Contributor[], { yesNo }?: {
   yesNo?: boolean;
 }): string;
 /**
@@ -1264,7 +1474,7 @@ export declare function toLatexCredits(authors: Author[], { yesNo }?: {
  * Lead-level roles are listed plainly; equal/supporting roles are annotated
  * with their level, matching the statement's `showLevels` behaviour.
  */
-export declare function toMarkdown(authors: Author[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
+export declare function toMarkdown(authors: Contributor[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
 interface Reference {
   "@id": string;
 }
@@ -1278,7 +1488,7 @@ interface RoCrateAttributionFragment {
  * reconciling existing identifiers. This fragment is not a standalone crate.
  * No package title, publication date, licence or workflow claims are invented.
  */
-export declare function toRoCrateFragment(authors: Author[]): {
+export declare function toRoCrateFragment(authors: Contributor[]): {
   metadata: RoCrateAttributionFragment;
   warnings: string[];
 };
@@ -1294,11 +1504,13 @@ export declare function toRoCrateFragment(authors: Author[]): {
  * is. "'+Pat" keeps its stray apostrophe in tenzing, to protect Excel users.
  * Columns this app does not hold are left empty for the team.
  */
-export declare function toTenzing(authors: Author[]): string;
+export declare function toTenzing(authors: Contributor[]): string;
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export declare function isTenzing(text: string): boolean;
 /** Read people from a tenzing sheet, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
-export declare function fromTenzing(text: string): Author[];
+export declare function fromTenzing(text: string): Person[];
+/** JATS versions the export writes. 1.4 wraps a group in `<collab-wrap>`; 1.3 has `<collab>` alone. */
+type JatsVersion = "1.3" | "1.4";
 /**
  * Serialize authors to a JATS4R-compliant XML string.
  * Output mirrors the format produced by the original Python app.
@@ -1306,8 +1518,9 @@ export declare function fromTenzing(text: string): Author[];
  * `degree-contribution`: the author never chose a level, so writing every role
  * as "lead" would claim one.
  */
-export declare function toJats4rXml(authors: Author[], { yesNo }?: {
+export declare function toJats4rXml(authors: Contributor[], { yesNo, jatsVersion }?: {
   yesNo?: boolean;
+  jatsVersion?: JatsVersion;
 }): string;
 export declare const STATEMENT_FORMATS: readonly ["by-role", "by-role-short", "by-author", "by-author-short"];
 type StatementFormat = (typeof STATEMENT_FORMATS)[number];
@@ -1390,14 +1603,14 @@ interface StatementSpan {
  * `by-author-short`:
  *   "CRediT: GBH: Conceptualization, Data curation; CD: Investigation; ..."
  */
-export declare function generateStatement(authors: Author[], options: StatementOptions): string;
+export declare function generateStatement(authors: Contributor[], options: StatementOptions): string;
 /**
  * The plain-text statement as spans, so a viewer can tie each phrase back to
  * the contributor and role it stands for. Takes the same options as
  * `generateStatement` (`asHtml` is ignored), and the spans' text joined in
  * order is exactly its plain-text output; no spans when that is empty.
  */
-export declare function statementSpans(authors: Author[], options: StatementOptions): StatementSpan[];
+export declare function statementSpans(authors: Contributor[], options: StatementOptions): StatementSpan[];
 type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "codemeta" | "cff" | "zenodo" | "xml" | "crossref" | "statement" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
@@ -1409,7 +1622,7 @@ export declare class ExportOnlyError extends Error {
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
 interface Imported {
   format: Exclude<DetectedFormat, "unknown" | "statement">;
-  authors: Author[];
+  authors: Contributor[];
   asks?: Record<string, Ask>;
   selfId?: string;
   title?: string;
@@ -1442,9 +1655,9 @@ export declare function createAuthor(name: string, overrides?: {
   orcid?: string;
   contributorType?: ContributorType;
   contributions?: Contribution[];
-  /** Shares first authorship. Outside the CRediT taxonomy; see AuthorSchema. */
+  /** Shares first authorship. Outside the CRediT taxonomy; see ContributorSchema. */
   equalContribution?: boolean;
-  /** Is a corresponding author. Outside the CRediT taxonomy; see AuthorSchema. */
+  /** Is a corresponding author. Outside the CRediT taxonomy; see ContributorSchema. */
   corresponding?: boolean;
   /**
    * Pre-split name parts, for callers that already hold structured names
@@ -1455,7 +1668,23 @@ export declare function createAuthor(name: string, overrides?: {
   firstName?: string;
   middleName?: string;
   surname?: string;
-}): Author;
+}): Person;
+/**
+ * Chip text for a group: its alias, else the first letter of each word of the name, skipping a
+ * leading "The". A name of one word ("COVIDSurg", an unspaced "新冠协作组") stays whole.
+ */
+export declare function groupInitials(name: string, alias?: string): string;
+/** A consortium row. Throws on an unusable name or an invalid ROR id, as `createAuthor` does. */
+export declare function createGroup(name: string, overrides?: {
+  id?: string;
+  alias?: string;
+  ror?: string;
+  members?: readonly Member[];
+  membersAre?: Group["membersAre"];
+  contactId?: string;
+  contributorType?: ContributorType;
+  contributions?: Contribution[];
+}): Group;
 /**
  * Rebuild a roster under the rules every caller shares: at most `MAX_AUTHORS`
  * rows, ids unique and shareable in a link, and initials re-derived and
@@ -1463,7 +1692,7 @@ export declare function createAuthor(name: string, overrides?: {
  * `createAuthor` cannot rebuild. A row that comes out unchanged is returned
  * as the same object, so memoised rows and cached reviews keep it.
  */
-export declare function normalizeRoster(authors: Author[]): Author[];
+export declare function normalizeRoster(authors: Contributor[]): Contributor[];
 /**
  * Surname particles that stay attached to the surname ("van der Berg, Anne"),
  * lower case with a straight apostrophe. Not "y", which joins two surnames
@@ -1477,13 +1706,13 @@ export declare const NAME_SUFFIXES: readonly string[];
  * Parse a newline- or comma-separated string of author names into Author objects.
  * Empty lines / entries are ignored.
  */
-export declare function parseAuthorText(text: string): Author[];
+export declare function parseAuthorText(text: string): Person[];
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 interface ShareData {
   toolchain?: Toolchain;
   /** The link named a writing tool this build does not know, so `toolchain` left it out. */
   toolchainDropped?: true;
-  authors: Author[];
+  authors: Contributor[];
   /** "" when the payload has none */
   title: string;
   /** contributor id the link is addressed to */
@@ -1508,7 +1737,7 @@ interface ShareData {
 }
 interface SharePayloadInput {
   toolchain?: Toolchain;
-  authors: Author[];
+  authors: Contributor[];
   title?: string;
   claimId?: string;
   sourceDraftId?: string;
@@ -1540,13 +1769,23 @@ export declare function decodeShareHash(hash: string): Promise<ShareData | null>
 interface StatementAuthor {
   given: string;
   surname: string;
+  /** A group: matched on its whole name (in `surname`) or its alias, never on initials. */
+  group?: boolean;
+  alias?: string;
 }
 /**
  * A contributor's name split the way the parser needs it. The given names are everything in the
  * display name before the surname, so "Grace Brewster Murray Hopper" keeps all three, and "Hopper, Grace"
  * reads the part after the comma.
  */
-export declare function statementAuthor(author: Pick<Author, "name" | "firstName" | "middleName" | "surname">): StatementAuthor;
+export declare function statementAuthor(author: {
+  name: string;
+  kind?: "person" | "group";
+  alias?: string;
+  firstName?: string;
+  middleName?: string;
+  surname?: string;
+}): StatementAuthor;
 /** What {@link parseStatement} read. */
 interface ParsedStatement {
   /** Each author (an index into the list passed in) and role the statement pairs, in author then CRediT order. */
@@ -1587,7 +1826,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_IMPORT_BYTES, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type Toolchain, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
+export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type Contributor, ContributorSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type Group, GroupSchema, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type JatsVersion, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_GROUP_MEMBERS, MAX_IMPORT_BYTES, type Member, MemberSchema, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Person, PersonSchema, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type Toolchain, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isGroup, isPerson, isValidOrcid, isValidRor, normalizeOrcid, normalizeRor, orcidOf, scoreToLevel, shortName };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

@@ -4,12 +4,15 @@ import { describe, expect, it } from "vitest";
 import { LEVEL_SCORE } from "../author";
 import { getRoleByName } from "../credit-roles";
 import { toJats4rXml } from "../export/xml";
-import { createAuthor } from "../parse-authors";
+import { createAuthor, createGroup } from "../parse-authors";
 
 // The suite's input format is described in conformance/README.md.
 interface Case {
   mode: "levels" | "yes-no";
   contributors: {
+    /** A consortium: its name, with optional member names, instead of `givenNames` and `surname`. */
+    group?: string;
+    members?: string[];
     givenNames: string;
     surname: string;
     orcid?: string;
@@ -27,18 +30,26 @@ const names = readdirSync(dir)
 
 function exportCase(name: string): string {
   const { mode, contributors }: Case = JSON.parse(readFileSync(`${dir}/${name}.json`, "utf8"));
+  const contributions = (c: Case["contributors"][number]) =>
+    Object.entries(c.roles).map(([role, level]) => ({
+      role: getRoleByName(role).name,
+      score: level === "yes" ? 100 : LEVEL_SCORE[level],
+    }));
   const authors = contributors.map((c) =>
-    createAuthor(`${c.givenNames} ${c.surname}`, {
-      surname: c.surname,
-      orcid: c.orcid,
-      contributorType: c.type,
-      equalContribution: c.equalContribution,
-      corresponding: c.corresponding,
-      contributions: Object.entries(c.roles).map(([role, level]) => ({
-        role: getRoleByName(role).name,
-        score: level === "yes" ? 100 : LEVEL_SCORE[level],
-      })),
-    }),
+    c.group
+      ? createGroup(c.group, {
+          contributorType: c.type,
+          members: c.members?.map((member) => ({ name: member })),
+          contributions: contributions(c),
+        })
+      : createAuthor(`${c.givenNames} ${c.surname}`, {
+          surname: c.surname,
+          orcid: c.orcid,
+          contributorType: c.type,
+          equalContribution: c.equalContribution,
+          corresponding: c.corresponding,
+          contributions: contributions(c),
+        }),
   );
   return `${toJats4rXml(authors, { yesNo: mode === "yes-no" })}\n`;
 }

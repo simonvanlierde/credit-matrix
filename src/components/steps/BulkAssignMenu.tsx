@@ -3,7 +3,7 @@ import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } fr
 import { create } from "zustand";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type Author, CREDIT_ROLES } from "@/core";
+import { type Contributor, CREDIT_ROLES } from "@/core";
 import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
@@ -19,8 +19,11 @@ export const DEFAULT_BULK_LEVEL = 66;
  * The roster before and after the last bulk action; shared, so a menu on any surface can start an
  * undo. `after` lets any other change to the roster drop it: undoing then would discard that edit.
  */
-const useBulkSnapshot = create<{ snapshot: { before: Author[]; after: Author[] } | null }>(() => ({ snapshot: null }));
-const setBulkUndo = (snapshot: { before: Author[]; after: Author[] } | null) => useBulkSnapshot.setState({ snapshot });
+const useBulkSnapshot = create<{ snapshot: { before: Contributor[]; after: Contributor[] } | null }>(() => ({
+  snapshot: null,
+}));
+const setBulkUndo = (snapshot: { before: Contributor[]; after: Contributor[] } | null) =>
+  useBulkSnapshot.setState({ snapshot });
 
 /** Run a bulk mutation with the roster snapshotted for undo; the grid shows the bar. */
 export function useRunBulk() {
@@ -96,7 +99,7 @@ export function BulkAssignMenu({
   runBulk,
   triggerRef,
 }: {
-  authors: Author[];
+  authors: Contributor[];
   graded: boolean;
   translateUi: UiTranslator;
   translateRole: RoleTranslator;

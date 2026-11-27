@@ -8,7 +8,8 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { DOMParser } from "linkedom";
 import * as z from "zod/mini";
-import type { Author } from "./author";
+import type { Contributor } from "./author";
+import { isPerson } from "./author";
 import {
   AVAILABLE_LOCALES,
   type LocaleCode,
@@ -52,9 +53,12 @@ Commands:
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
   convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|pdf|quarto|myst|ro-crate [--yes-no] [--locale <code>]
+      [--jats-version 1.3|1.4]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
+      --jats-version 1.4 writes a group's members inside a <collab-wrap>;
+      the default 1.3 lists them in a contrib-group after the authors.
       --locale sets the language of the md role names and the figure labels.
       crossref prints the <contributors> block of a Crossref deposit (schema
       5.5.0), which has no levels.
@@ -215,14 +219,16 @@ function distance(a: string, b: string): number {
 }
 
 /** The contributor `wanted` names: by id, full name, then a first name or surname only one person has. */
-function findContributor(authors: Author[], wanted: string): Author {
+function findContributor(authors: Contributor[], wanted: string): Contributor {
   // Typed or pasted names may be decomposed (NFD); the roster is composed.
   const lower = wanted.normalize("NFC").toLowerCase();
   const exact =
     authors.find((a) => a.id === wanted) ?? authors.find((a) => a.name.normalize("NFC").toLowerCase() === lower);
   if (exact) return exact;
   const partial = authors.filter(
-    (a) => a.firstName.normalize("NFC").toLowerCase() === lower || a.surname.normalize("NFC").toLowerCase() === lower,
+    (a) =>
+      isPerson(a) &&
+      (a.firstName.normalize("NFC").toLowerCase() === lower || a.surname.normalize("NFC").toLowerCase() === lower),
   );
   if (partial.length === 1 && partial[0]) return partial[0];
   const listed = (partial.length > 1 ? partial : authors).map((a) => a.name);
@@ -266,6 +272,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
       "base-url": { type: "string", default: DEFAULT_BASE_URL },
       levels: { type: "boolean", default: false },
       "yes-no": { type: "boolean", default: false },
+      "jats-version": { type: "string" },
       json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
@@ -324,8 +331,12 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
           return toJson(authors, { asks: imported.asks, selfId: imported.selfId, toolchain: imported.toolchain });
         case "csv":
           return toCsv(authors);
-        case "jats":
-          return toJats4rXml(authors, { yesNo: values["yes-no"] });
+        case "jats": {
+          const jatsVersion = values["jats-version"] ?? "1.3";
+          if (jatsVersion !== "1.3" && jatsVersion !== "1.4")
+            throw new UsageError("--jats-version must be 1.3 or 1.4.");
+          return toJats4rXml(authors, { yesNo: values["yes-no"], jatsVersion });
+        }
         case "crossref":
           return toCrossrefContributors(authors);
         case "md": {

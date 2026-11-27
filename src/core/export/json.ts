@@ -1,13 +1,16 @@
 import * as z from "zod/mini";
 import type { Ask } from "../ask";
 import { AskSchema } from "../ask";
-import type { Author } from "../author";
-import { AuthorSchema, MAX_AUTHORS } from "../author";
-import { normalizeContributions } from "../parse-authors";
+import type { Contributor } from "../author";
+import { ContributorSchema, MAX_AUTHORS } from "../author";
+import { normalizeContributions, relinkGroups } from "../parse-authors";
 import { type Toolchain, ToolchainSchema } from "../toolchain";
 
-/** The export format version this build writes and reads. */
-export const JSON_EXPORT_VERSION = 1;
+/**
+ * The export format version this build writes. Version 2 adds group rows (`kind: "group"`) and a
+ * `kind` on every row; version 1 files, whose rows are all people, still read.
+ */
+export const JSON_EXPORT_VERSION = 2;
 
 const REPEATED_ID_MESSAGE = "duplicate contributor ids";
 
@@ -17,8 +20,8 @@ export const UNKNOWN_TOOLCHAIN_WARNING =
 
 export const ExportSchema = /* @__PURE__ */ (() =>
   z.object({
-    version: z.literal(JSON_EXPORT_VERSION),
-    authors: z.array(AuthorSchema).check(
+    version: z.union([z.literal(1), z.literal(JSON_EXPORT_VERSION)]),
+    authors: z.array(ContributorSchema).check(
       z.maxLength(MAX_AUTHORS),
       // Answers and sign-ins are keyed by row id, so a repeated id is ambiguous.
       z.refine((authors) => new Set(authors.map((author) => author.id)).size === authors.length, {
@@ -56,7 +59,7 @@ export class RepeatedIdError extends Error {
  * share an id.
  */
 export function toJson(
-  authors: Author[],
+  authors: Contributor[],
   {
     asks,
     includeAnswers = true,
@@ -88,7 +91,7 @@ export function toJson(
  * A toolchain this build does not know is left out, with a line saying so in `warnings`.
  */
 export function fromJson(json: string): {
-  authors: Author[];
+  authors: Contributor[];
   asks?: Record<string, Ask>;
   selfId?: string;
   toolchain?: Toolchain;
@@ -107,7 +110,10 @@ export function fromJson(json: string): {
   const toolchain = ToolchainSchema.safeParse(result.data.toolchain).data;
   return {
     // A file may repeat or reorder roles; every export reads contributions by position.
-    authors: authors.map((author) => ({ ...author, contributions: normalizeContributions(author.contributions) })),
+    // A group's link to an id that names no person in the file is dropped, as `normalizeRoster` drops it.
+    authors: relinkGroups(
+      authors.map((author) => ({ ...author, contributions: normalizeContributions(author.contributions) })),
+    ),
     ...(asks ? { asks } : {}),
     ...(selfId ? { selfId } : {}),
     ...(toolchain ? { toolchain } : {}),

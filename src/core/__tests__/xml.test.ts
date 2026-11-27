@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { MAX_AUTHORS } from "../author";
+import { MAX_AUTHORS, MAX_GROUP_MEMBERS, MAX_IMPORT_BYTES } from "../author";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml, readPerson, XmlParseError } from "../export/xml-import";
@@ -280,10 +280,10 @@ describe("toJats4rXml", () => {
     expect(xml).toContain('<contrib contrib-type="contributor">');
   });
 
-  it("skips a nameless contrib (e.g. a <collab> group) instead of aborting the import", () => {
+  it("skips a nameless contrib (e.g. an empty <collab>) instead of aborting the import", () => {
     const xml = `<article><contrib-group>
       <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib>
-      <contrib contrib-type="author"><collab>The Working Group</collab></contrib>
+      <contrib contrib-type="author"><collab>  </collab></contrib>
     </contrib-group></article>`;
 
     const parsed = fromJats4rXml(xml);
@@ -311,7 +311,7 @@ describe("toJats4rXml", () => {
     expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
-  it("imports each member of a collab once, and collapses spaces inside names", () => {
+  it("imports a collab as one group holding its members, and collapses spaces inside names", () => {
     const xml = `<article><contrib-group>
       <contrib contrib-type="author"><collab>The Lab
         <contrib-group>
@@ -321,7 +321,13 @@ describe("toJats4rXml", () => {
       </collab></contrib>
     </contrib-group></article>`;
 
-    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Ann Hopper", "Charles Darwin"]);
+    const [group, ...rest] = fromJats4rXml(xml);
+    expect(rest).toEqual([]);
+    expect(group).toMatchObject({
+      kind: "group",
+      name: "The Lab",
+      members: [{ name: "Grace Ann Hopper" }, { name: "Charles Darwin" }],
+    });
   });
 
   it("keeps a double surname as JATS splits it, with single spaces", () => {
@@ -539,5 +545,40 @@ describe("reading stops one past the contributor cap", () => {
 
   it("reads no more than one author past the cap, which every caller then refuses", () => {
     expect(fromJats4rXml(jats(MAX_AUTHORS + 50))).toHaveLength(MAX_AUTHORS + 1);
+  });
+
+  it("reads a file of group contribs that all name one long member list about as fast as people", {
+    timeout: 60_000,
+  }, () => {
+    // Half the byte cap of group contribs, each linked to the other half: one shared member list.
+    // Reading the list once per group took 13 s here; a file of people at the cap takes about 60 ms.
+    const holder = '<contrib contrib-type="author"><collab>X</collab><xref ref-type="other" rid="g"/></contrib>';
+    const member = "<contrib><string-name>A</string-name></contrib>";
+    const wrap = (contribs: string, after = "") =>
+      `<article><front><article-meta><contrib-group>${contribs}</contrib-group>${after}</article-meta></front></article>`;
+    const half = MAX_IMPORT_BYTES / 2;
+    const fanOut = wrap(
+      holder.repeat(Math.floor(half / holder.length)),
+      `<contrib-group id="g">${member.repeat(Math.floor((half - 200) / member.length))}</contrib-group>`,
+    );
+    const person =
+      '<contrib contrib-type="author"><name><surname>Curie</surname><given-names>Marie</given-names></name></contrib>';
+    const people = wrap(person.repeat(Math.floor((MAX_IMPORT_BYTES - 200) / person.length)));
+    expect(fanOut.length).toBeLessThanOrEqual(MAX_IMPORT_BYTES);
+    // Best of 2, and compared with the people file on the same machine: CI under coverage is slow.
+    let groups: ReturnType<typeof fromJats4rXml> = [];
+    const best = (xml: string) =>
+      Math.min(
+        ...[0, 1].map(() => {
+          const start = performance.now();
+          groups = fromJats4rXml(xml);
+          return performance.now() - start;
+        }),
+      );
+    const peopleMs = best(people);
+    const fanOutMs = best(fanOut);
+    expect(fanOutMs < 1000 || fanOutMs < 5 * peopleMs, `${Math.round(fanOutMs)} ms`).toBe(true);
+    expect(groups).toHaveLength(MAX_AUTHORS + 1);
+    expect(groups[0]).toHaveProperty("members.length", MAX_GROUP_MEMBERS);
   });
 });

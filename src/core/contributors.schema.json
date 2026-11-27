@@ -3,137 +3,282 @@
   "$id": "https://raw.githubusercontent.com/simonvanlierde/credit-matrix/main/src/core/contributors.schema.json",
   "$comment": "By scripts/build-contributors-schema.mjs from src/core. Do not edit.",
   "title": "CRediT Matrix contributors file",
-  "description": "The JSON file `credit-matrix` reads and `convert --to json` writes (version 1). A missing `id` gets a random one. Other unknown fields are ignored. `asks` holds the app's ask-and-reply state: the CLI checks it, but this schema leaves it out, so leave it out of a file you write. JSON Schema cannot express these checks, which the CLI still applies: No two authors share an `id`. `name` holds at least one letter, or is an ORCID iD. `orcid` is an ORCID iD with a valid check digit, bare (`0000-0002-1825-0097`) or as an orcid.org URL. The file is under 2 MB.",
+  "description": "The JSON file `credit-matrix` reads and `convert --to json` writes (version 2; version 1 files, which hold only people, still read). A missing `id` gets a random one. Other unknown fields are ignored. `asks` holds the app's ask-and-reply state: the CLI checks it, but this schema leaves it out, so leave it out of a file you write. JSON Schema cannot express these checks, which the CLI still applies: No two authors share an `id`. `name` holds at least one letter, or is an ORCID iD. `orcid` is an ORCID iD with a valid check digit, bare (`0000-0002-1825-0097`) or as an orcid.org URL. A group's `name` holds at least one letter. `ror` is a ROR id with a valid checksum, bare (`05dxps055`) or as a ror.org URL. It is never looked up. The file is under 2 MB.",
   "type": "object",
   "properties": {
     "version": {
-      "type": "number",
-      "const": 1
+      "anyOf": [
+        {
+          "type": "number",
+          "const": 1
+        },
+        {
+          "type": "number",
+          "const": 2
+        }
+      ]
     },
     "authors": {
       "maxItems": 420,
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Stable id. Letters, digits, `_` and `-`, up to 64 characters; the CLI replaces any other id with a random one.",
-            "pattern": "^[A-Za-z0-9_-]{1,64}$",
-            "not": {
-              "enum": [
-                "constructor",
-                "__defineGetter__",
-                "__defineSetter__",
-                "hasOwnProperty",
-                "__lookupGetter__",
-                "__lookupSetter__",
-                "isPrototypeOf",
-                "propertyIsEnumerable",
-                "toString",
-                "valueOf",
-                "__proto__",
-                "toLocaleString"
-              ]
-            }
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 500,
-            "description": "Display name as written, for example \"Grace B. Hopper\"."
-          },
-          "firstName": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "First name."
-          },
-          "middleName": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "Middle names or initials; \"\" when there are none."
-          },
-          "surname": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "Surname."
-          },
-          "initials": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "Initials used in short statements, for example \"GBH\"."
-          },
-          "orcid": {
-            "type": "string",
-            "description": "ORCID iD. Optional."
-          },
-          "contributorType": {
-            "default": "author",
-            "type": "string",
-            "enum": [
-              "author",
-              "non-author"
-            ],
-            "description": "`author` for a named author, `non-author` for someone credited in the Acknowledgements."
-          },
-          "contributions": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "role": {
-                  "type": "string",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "default": "person",
+                "type": "string",
+                "const": "person",
+                "description": "`person` for a named individual. A row without `kind` is a person, as in every version 1 file."
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable id. Letters, digits, `_` and `-`, up to 64 characters; the CLI replaces any other id with a random one.",
+                "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                "not": {
                   "enum": [
-                    "Conceptualization",
-                    "Data curation",
-                    "Formal analysis",
-                    "Funding acquisition",
-                    "Investigation",
-                    "Methodology",
-                    "Project administration",
-                    "Resources",
-                    "Software",
-                    "Supervision",
-                    "Validation",
-                    "Visualization",
-                    "Writing – original draft",
-                    "Writing – review & editing"
-                  ],
-                  "description": "The NISO role name. The two Writing roles use an en dash (U+2013); `credit-matrix roles` lists them."
-                },
-                "score": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 100,
-                  "description": "0 is no contribution, 1 to 33 supporting, 34 to 66 equal, 67 to 100 lead."
+                    "constructor",
+                    "__defineGetter__",
+                    "__defineSetter__",
+                    "hasOwnProperty",
+                    "__lookupGetter__",
+                    "__lookupSetter__",
+                    "isPrototypeOf",
+                    "propertyIsEnumerable",
+                    "toString",
+                    "valueOf",
+                    "__proto__",
+                    "toLocaleString"
+                  ]
                 }
               },
-              "required": [
-                "role",
-                "score"
-              ]
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "Display name as written, for example \"Grace B. Hopper\"."
+              },
+              "firstName": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "First name."
+              },
+              "middleName": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Middle names or initials; \"\" when there are none."
+              },
+              "surname": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Surname."
+              },
+              "initials": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Initials used in short statements, for example \"GBH\"."
+              },
+              "orcid": {
+                "type": "string",
+                "description": "ORCID iD. Optional."
+              },
+              "contributorType": {
+                "default": "author",
+                "type": "string",
+                "enum": [
+                  "author",
+                  "non-author"
+                ],
+                "description": "`author` for a named author, `non-author` for someone credited in the Acknowledgements."
+              },
+              "contributions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "Conceptualization",
+                        "Data curation",
+                        "Formal analysis",
+                        "Funding acquisition",
+                        "Investigation",
+                        "Methodology",
+                        "Project administration",
+                        "Resources",
+                        "Software",
+                        "Supervision",
+                        "Validation",
+                        "Visualization",
+                        "Writing – original draft",
+                        "Writing – review & editing"
+                      ],
+                      "description": "The NISO role name. The two Writing roles use an en dash (U+2013); `credit-matrix roles` lists them."
+                    },
+                    "score": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100,
+                      "description": "0 is no contribution, 1 to 33 supporting, 34 to 66 equal, 67 to 100 lead."
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "score"
+                  ]
+                },
+                "description": "One score per CRediT role. A role left out scores 0; a repeated role keeps its highest score."
+              },
+              "equalContribution": {
+                "default": false,
+                "type": "boolean",
+                "description": "Shares first authorship with the others so marked."
+              },
+              "corresponding": {
+                "default": false,
+                "type": "boolean",
+                "description": "Is a corresponding author."
+              }
             },
-            "description": "One score per CRediT role. A role left out scores 0; a repeated role keeps its highest score."
+            "required": [
+              "name",
+              "firstName",
+              "middleName",
+              "surname",
+              "initials",
+              "contributions"
+            ]
           },
-          "equalContribution": {
-            "default": false,
-            "type": "boolean",
-            "description": "Shares first authorship with the others so marked."
-          },
-          "corresponding": {
-            "default": false,
-            "type": "boolean",
-            "description": "Is a corresponding author."
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "group",
+                "description": "`group`: a consortium credited as one contributor."
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable id, as for a person."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "The group as it is credited, for example \"The COVIDSurg Collaborative\"."
+              },
+              "initials": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Chip text: the alias, else derived from the name."
+              },
+              "contributorType": {
+                "default": "author",
+                "type": "string",
+                "enum": [
+                  "author",
+                  "non-author"
+                ],
+                "description": "As for a person."
+              },
+              "contributions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "Conceptualization",
+                        "Data curation",
+                        "Formal analysis",
+                        "Funding acquisition",
+                        "Investigation",
+                        "Methodology",
+                        "Project administration",
+                        "Resources",
+                        "Software",
+                        "Supervision",
+                        "Validation",
+                        "Visualization",
+                        "Writing – original draft",
+                        "Writing – review & editing"
+                      ]
+                    },
+                    "score": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "score"
+                  ]
+                },
+                "description": "As for a person."
+              },
+              "alias": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "Short form for chips and heatmap labels. Optional."
+              },
+              "ror": {
+                "type": "string",
+                "description": "ROR id, bare or as a ror.org URL. Optional."
+              },
+              "members": {
+                "default": [],
+                "maxItems": 5000,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 500,
+                      "description": "The member's name as written."
+                    },
+                    "personId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "The `id` of a person row this member is. A row that does not exist drops the link."
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "description": "The people the group names, in order. Optional."
+              },
+              "membersAre": {
+                "default": "collaborators",
+                "type": "string",
+                "enum": [
+                  "authors",
+                  "collaborators"
+                ],
+                "description": "`authors` or `collaborators`: what the members are to the work."
+              },
+              "contactId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The `id` of the linked person row that answers review requests for the group. Optional."
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "initials",
+              "contributions"
+            ]
           }
-        },
-        "required": [
-          "name",
-          "firstName",
-          "middleName",
-          "surname",
-          "initials",
-          "contributions"
         ]
       },
       "description": "The contributors, in byline order."

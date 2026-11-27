@@ -1,7 +1,7 @@
-import type { Author, Contribution } from "../author";
-import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
+import type { Contribution, Contributor, Member, Person } from "../author";
+import { isValidOrcid, isValidRor, LEVEL_SCORE, MAX_GROUP_MEMBERS, normalizeOrcid, normalizeRor } from "../author";
 import { CREDIT_ROLES, roleNamed } from "../credit-roles";
-import { cleanNamePart, createAuthor, deduplicateAuthorInitials, readUpToCap } from "../parse-authors";
+import { cleanNamePart, createAuthor, createGroup, deduplicateAuthorInitials, readUpToCap } from "../parse-authors";
 
 /** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
 const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
@@ -9,9 +9,21 @@ const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(
 /** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
 export interface XmlElement {
   readonly textContent: string | null;
+  /** Browser and linkedom elements have both. Without `localName` a Crossref `<organization>` reads as nothing. */
+  readonly localName?: string;
+  /** A group's name is the text of its `<collab>` outside the member list. */
+  readonly childNodes?: ArrayLike<XmlNode>;
   getAttribute(name: string): string | null;
   querySelector(selectors: string): XmlElement | null;
   querySelectorAll(selectors: string): ArrayLike<XmlElement>;
+}
+
+/** A DOM node: text is `nodeType` 3, an element 1. */
+export interface XmlNode {
+  readonly nodeType: number;
+  readonly textContent: string | null;
+  readonly localName?: string;
+  readonly childNodes?: ArrayLike<XmlNode>;
 }
 
 /** A `DOMParser`: the browser's own, or linkedom's in Node. */
@@ -24,7 +36,7 @@ export interface XmlParser {
  * Python app) back into an Author array. `parser` defaults to the global
  * `DOMParser`; pass one where there is none, such as linkedom's in Node.
  */
-export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Author[] {
+export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Contributor[] {
   const doc = parseXml(xmlString, parser, "fromJats4rXml");
 
   const roleNameByUrl = new Map<string, string>(CREDIT_ROLES.map((r) => [normalizeRoleUrl(r.url), r.name]));
@@ -32,14 +44,48 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   const contribEls = Array.from(doc.querySelectorAll("contrib"));
   if (contribEls.length === 0) return [];
 
-  const authors = readUpToCap(contribEls, (contrib) => {
+  // A group's members belong to the group, not the list: contribs nested in the group's own contrib
+  // (1.4 <collab-wrap>, or a <collab> from older files), or in the <contrib-group> its <xref> names (1.3).
+  const groupsById = new Map(
+    Array.from(doc.querySelectorAll("contrib-group")).map((group) => [group.getAttribute("id"), group]),
+  );
+  const holderOf = (contrib: XmlElement): XmlElement | undefined => {
+    const rid = contrib.querySelector('xref[ref-type="other"]')?.getAttribute("rid");
+    return (rid ? groupsById.get(rid) : undefined) ?? contrib.querySelector("contrib-group") ?? undefined;
+  };
+  // Each member list is read once: many group contribs may name one list, and a nested group's list
+  // is already inside its parent's. Reading it per group contrib is N*M on a crafted file.
+  const listed = new Map<XmlElement, XmlElement[]>();
+  const memberEls = new Set<XmlElement>();
+  for (const contrib of contribEls) {
+    // Only a contrib that names a group has members; a file of people at the byte cap skips the lookups.
+    if (memberEls.has(contrib) || !contrib.querySelector("collab, collab-name")) continue;
+    const holder = holderOf(contrib);
+    if (!holder || listed.has(holder)) continue;
+    const els = Array.from(holder.querySelectorAll("contrib"));
+    listed.set(holder, els);
+    for (const el of els) memberEls.add(el);
+  }
+  const membersOf = (holder: XmlElement): Member[] => {
+    const names: Member[] = [];
+    for (const member of listed.get(holder) ?? []) {
+      if (names.length >= MAX_GROUP_MEMBERS) break;
+      const parts = ["given-names", "surname", "suffix"].map((tag) => squash(member.querySelector(tag)?.textContent));
+      const text = parts.some(Boolean)
+        ? parts.filter(Boolean).join(" ")
+        : squash(member.querySelector("string-name")?.textContent ?? member.querySelector("name")?.textContent);
+      if (text) names.push({ name: text });
+    }
+    return names;
+  };
+  // The cleaned member list of each holder: `createGroup` cleans it for the first group that names
+  // it, and the others share it, so many groups naming one long list cost one pass.
+  const cleanedByHolder = new Map<XmlElement, Member[]>();
+  const authors = readUpToCap<XmlElement, Contributor>(contribEls, (contrib) => {
+    if (memberEls.has(contrib)) return [];
     // Editors, reviewers and other non-credited contrib types are not authors.
     const contribType = contrib.getAttribute("contrib-type");
     if (contribType && contribType !== "author" && contribType !== "contributor") return [];
-    // A <collab> with members holds their contribs: they import on their own,
-    // and reading the group would pick up the first member's name again.
-    if (contrib.querySelector("contrib")) return [];
-
     // Parse role elements. The `vocab-term-identifier` URL is authoritative; then
     // `vocab-term`, then the text content, read whatever their case or dash
     // ("Writing - original draft").
@@ -66,6 +112,32 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     const equalContribution = contrib.getAttribute("equal-contrib") === "yes";
     const corresponding = contrib.getAttribute("corresp") === "yes";
 
+    const collab = contrib.querySelector("collab-name") ?? contrib.querySelector("collab");
+    if (collab) {
+      // JATS 1.3 has <collab> in the contrib; 1.4 wraps a <collab-name> and the member list in <collab-wrap>.
+      const name = squash(textOutsideMembers(collab));
+      if (!name) return [];
+      const holder = holderOf(contrib);
+      const cleaned = holder && cleanedByHolder.get(holder);
+      const ror = normalizeRor(squash(contrib.querySelector('contrib-id[contrib-id-type="ror"]')?.textContent));
+      try {
+        const group = createGroup(name, {
+          contributions,
+          contributorType,
+          members: cleaned || !holder ? [] : membersOf(holder),
+          membersAre: holder?.getAttribute("content-type") === "authors" ? "authors" : "collaborators",
+          ...(ror && isValidRor(ror) ? { ror } : {}),
+        });
+        if (!cleaned) {
+          if (holder) cleanedByHolder.set(holder, group.members);
+          return [group];
+        }
+        return [{ ...group, members: cleaned }];
+      } catch {
+        return [];
+      }
+    }
+
     const person = readPerson(
       {
         given: contrib.querySelector("given-names")?.textContent,
@@ -81,6 +153,20 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   });
 
   return deduplicateAuthorInitials(authors);
+}
+
+/** Elements whose text is not part of a group's name: its member list and the xref to it. */
+const NOT_THE_NAME = new Set(["contrib-group", "contrib", "xref"]);
+
+/** The text of a `<collab>` or `<collab-name>`, inline markup such as `<italic>` included. */
+function textOutsideMembers(node: Omit<XmlNode, "nodeType">): string {
+  if (!node.childNodes) return node.textContent ?? "";
+  return Array.from(node.childNodes, (child) => {
+    if (child.nodeType === 3) return child.textContent ?? "";
+    // A space where a skipped element was, so the words on either side stay apart.
+    if (child.nodeType !== 1 || NOT_THE_NAME.has(child.localName ?? "")) return " ";
+    return textOutsideMembers(child);
+  }).join("");
 }
 
 /** Text that is not well-formed XML, such as a truncated file. */
@@ -126,8 +212,8 @@ const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g,
  */
 export function readPerson(
   text: { given?: string | null; surname?: string | null; suffix?: string | null; orcid?: string | null },
-  overrides: Partial<Pick<Author, "contributions" | "contributorType" | "equalContribution" | "corresponding">>,
-): Author | null {
+  overrides: Partial<Pick<Person, "contributions" | "contributorType" | "equalContribution" | "corresponding">>,
+): Person | null {
   const given = squash(text.given);
   const surname = squash(text.surname);
   const displayName = [given, surname, squash(text.suffix)].filter(Boolean).join(" ");

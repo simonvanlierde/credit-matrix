@@ -3,7 +3,7 @@ import { useState } from "react";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type Author, CREDIT_ROLES, generateStatement } from "@/core";
+import { type Contributor, CREDIT_ROLES, generateStatement } from "@/core";
 import { heatCellColor, onColor } from "@/core/contributor-color";
 import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
@@ -26,16 +26,16 @@ export function MobileRoleList({
   levelLabel,
   handleCellClick,
 }: {
-  authors: Author[];
+  authors: Contributor[];
   graded: boolean;
   /** The fill hue for a contributor: their own, or the draft's one hue. */
-  hueOf: (author: Author) => string;
+  hueOf: (author: Contributor) => string;
   dark: boolean;
   settled: boolean;
   isFrozen: (authorId: string) => boolean;
-  assignmentLabel: (author: Author, roleIndex: number, score: number) => string;
+  assignmentLabel: (author: Contributor, roleIndex: number, score: number) => string;
   levelLabel: (score: number) => string;
-  handleCellClick: (author: Author, roleIndex: number, score: number) => void;
+  handleCellClick: (author: Contributor, roleIndex: number, score: number) => void;
 }) {
   const t = useTranslations();
   const { translateInterfaceRole, describeRole, interfaceRoleLanguage, translateRole, translateUi, outputLanguage } =

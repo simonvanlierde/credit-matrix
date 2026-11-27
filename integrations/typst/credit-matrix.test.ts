@@ -16,7 +16,7 @@ import {
 } from "@/core";
 import { cast } from "@/core/__tests__/cast";
 import * as i18n from "@/core/i18n";
-import { deduplicateAuthorInitials } from "@/core/parse-authors";
+import { createGroup, deduplicateAuthorInitials, groupInitials } from "@/core/parse-authors";
 import { heatmapRecipe } from "@/lib/heatmap-recipe";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { renderTypstTranslations } from "../../scripts/build-typst-translations.mjs";
@@ -346,6 +346,14 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     ]);
   });
 
+  it("gives each group the chip text the app gives it", () => {
+    const names = ["The COVIDSurg Collaborative", "COVIDSurg", "The Lancet", "The", "新冠协作组", "Study Group 2"];
+    const calls = names.map((name) => `_group-initials(${JSON.stringify(name)}, none)`);
+    const run = typst("eval", `import "lib.typ": *; (${calls.join(", ")},)`);
+    expect(run.status, run.stderr).toBe(0);
+    expect(JSON.parse(run.stdout)).toEqual(names.map((name) => groupInitials(name)));
+  });
+
   it("takes an export's stored name parts while they fit, and a document's own initials as written", () => {
     // Export rows without initials, as a hand-made file has them: the stored parts decide when they
     // fit the name, and the name decides when they are empty or stale.
@@ -427,6 +435,18 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
       `#import "../lib.typ": *\n#credit-statement(((name: "Ana", roles: (conceptualization: true)),), lang: "zh-Hans-TW")`,
     );
     expect(autoStatement(file)).toBe(await appStatement1(["Ana"], "zh-Hans", false));
+  });
+
+  it("names a group in the statement as the app does", async () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const file = "out/group.typ";
+    writeFileSync(
+      new URL(file, import.meta.url),
+      `#import "../lib.typ": *\n#credit-statement(((name: "The COVIDSurg Collaborative", kind: "group", roles: (investigation: true)),))`,
+    );
+    const group = createGroup("The COVIDSurg Collaborative");
+    for (const c of group.contributions) c.score = c.role === "Investigation" ? 100 : 0;
+    expect(autoStatement(file)).toBe(generateStatement([group], { format: "by-author", showLevels: false }));
   });
 
   it("joins Spanish names like ICU, with e before an i sound", async () => {

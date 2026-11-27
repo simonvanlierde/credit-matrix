@@ -1950,3 +1950,45 @@ msgstr "Ferramenta de escrita"
 
 msgid "docsOnPage"
 msgstr "Nesta página"
+
+msgid "addGroupButton"
+msgstr "Adicionar um grupo (consórcio ou colaboração)"
+
+msgid "groupBadge"
+msgstr "Grupo"
+
+msgid "groupDetails"
+msgstr "Detalhes do grupo"
+
+msgid "groupAliasLabel"
+msgstr "Nome curto (chips e figura)"
+
+msgid "groupRorLabel"
+msgstr "ID ou URL ROR"
+
+msgid "errRorInvalid"
+msgstr "Esse não é um ID ROR válido."
+
+msgid "errGroupMembersLimit"
+msgstr "Um grupo suporta no máximo {limit} membros. Remova alguns para guardar a lista."
+
+msgid "groupMembersLabel"
+msgstr "Membros (um nome por linha)"
+
+msgid "groupMembersAre"
+msgstr "Os membros são"
+
+msgid "groupMembersAuthors"
+msgstr "Autores"
+
+msgid "groupMembersCollaborators"
+msgstr "Colaboradores"
+
+msgid "groupContactLabel"
+msgstr "Pessoa de contacto (responde aos pedidos de revisão)"
+
+msgid "groupContactNone"
+msgstr "Sem contacto"
+
+msgid "annGroupAdded"
+msgstr "{name} adicionado como grupo."

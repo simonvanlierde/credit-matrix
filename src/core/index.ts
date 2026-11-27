@@ -24,16 +24,36 @@ export {
   review,
   settledAt,
 } from "./ask";
-export type { Author, Contribution, ContributionLevel, ContributorType } from "./author";
+export type {
+  Author,
+  Contribution,
+  ContributionLevel,
+  Contributor,
+  ContributorType,
+  Group,
+  Member,
+  Person,
+} from "./author";
 export {
   AuthorSchema,
   ContributionSchema,
+  ContributorSchema,
+  GroupSchema,
+  isGroup,
+  isPerson,
   isValidOrcid,
+  isValidRor,
   MAX_AUTHOR_NAME_LENGTH,
   MAX_AUTHORS,
+  MAX_GROUP_MEMBERS,
   MAX_IMPORT_BYTES,
+  MemberSchema,
   normalizeOrcid,
+  normalizeRor,
+  orcidOf,
+  PersonSchema,
   scoreToLevel,
+  shortName,
 } from "./author";
 export type { CreditRoleName } from "./credit-roles";
 export { CREDIT_ROLES, getRoleByName } from "./credit-roles";
@@ -51,6 +71,7 @@ export { toMarkdown } from "./export/markdown";
 export type { RoCrateAttributionFragment } from "./export/ro-crate";
 export { toRoCrateFragment } from "./export/ro-crate";
 export { fromTenzing, isTenzing, toTenzing } from "./export/tenzing";
+export type { JatsVersion } from "./export/xml";
 export { toJats4rXml } from "./export/xml";
 export type { XmlElement, XmlParser } from "./export/xml-import";
 export { fromJats4rXml, XmlParseError } from "./export/xml-import";
@@ -60,7 +81,15 @@ export type { DetectedFormat, Imported } from "./import";
 export { detectFormat, ExportOnlyError, importAny } from "./import";
 export type { OrcidKey, OrcidProof } from "./orcid-proof";
 export { fetchOrcidKeys, verifyOrcidToken } from "./orcid-proof";
-export { createAuthor, NAME_PARTICLES, NAME_SUFFIXES, normalizeRoster, parseAuthorText } from "./parse-authors";
+export {
+  createAuthor,
+  createGroup,
+  groupInitials,
+  NAME_PARTICLES,
+  NAME_SUFFIXES,
+  normalizeRoster,
+  parseAuthorText,
+} from "./parse-authors";
 export { decodeShareHash, encodeShareHash } from "./share-link";
 export type { ShareData, SharePayloadInput } from "./share-payload";
 export type { ParsedStatement, StatementAuthor } from "./statement";

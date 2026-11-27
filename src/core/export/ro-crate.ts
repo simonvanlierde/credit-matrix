@@ -1,4 +1,4 @@
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { buildAttribution } from "./codemeta";
 
@@ -17,7 +17,10 @@ export interface RoCrateAttributionFragment {
  * reconciling existing identifiers. This fragment is not a standalone crate.
  * No package title, publication date, licence or workflow claims are invented.
  */
-export function toRoCrateFragment(authors: Author[]): { metadata: RoCrateAttributionFragment; warnings: string[] } {
+export function toRoCrateFragment(authors: Contributor[]): {
+  metadata: RoCrateAttributionFragment;
+  warnings: string[];
+} {
   const { metadata: attribution, warnings } = buildAttribution(authors);
   const root = { "@id": "./", author: [] as Reference[], contributor: [] as Reference[] };
   const graph: RoCrateAttributionFragment["@graph"] = [root];
@@ -26,7 +29,7 @@ export function toRoCrateFragment(authors: Author[]): { metadata: RoCrateAttribu
   let roleIndex = 0;
   for (const field of ["author", "contributor"] as const) {
     for (const entry of attribution[field]) {
-      if (entry.type === "Person") {
+      if (entry.type !== "Role") {
         const { type, id, ...name } = entry;
         if (!people.has(id)) {
           graph.push({ "@id": id, "@type": type, ...name });

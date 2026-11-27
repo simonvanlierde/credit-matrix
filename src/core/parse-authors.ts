@@ -1,11 +1,16 @@
-import type { Author, Contribution, ContributorType } from "./author";
+import type { Contribution, Contributor, ContributorType, Group, Member, Person } from "./author";
 import {
+  isGroup,
+  isPerson,
   isShareableId,
   isUsableAuthorName,
   isValidOrcid,
+  isValidRor,
   MAX_AUTHOR_NAME_LENGTH,
   MAX_AUTHORS,
+  MAX_GROUP_MEMBERS,
   normalizeOrcid,
+  normalizeRor,
   ORCID_INPUT_REGEX,
 } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
@@ -117,9 +122,9 @@ export function createAuthor(
     orcid?: string;
     contributorType?: ContributorType;
     contributions?: Contribution[];
-    /** Shares first authorship. Outside the CRediT taxonomy; see AuthorSchema. */
+    /** Shares first authorship. Outside the CRediT taxonomy; see ContributorSchema. */
     equalContribution?: boolean;
-    /** Is a corresponding author. Outside the CRediT taxonomy; see AuthorSchema. */
+    /** Is a corresponding author. Outside the CRediT taxonomy; see ContributorSchema. */
     corresponding?: boolean;
     /**
      * Pre-split name parts, for callers that already hold structured names
@@ -131,7 +136,7 @@ export function createAuthor(
     middleName?: string;
     surname?: string;
   },
-): Author {
+): Person {
   name = cleanText(name);
   const parsed = parseNameParts(name);
   const firstName = overrides?.firstName === undefined ? parsed.firstName : cleanText(overrides.firstName);
@@ -139,7 +144,7 @@ export function createAuthor(
   const surname = overrides?.surname === undefined ? parsed.surname : cleanText(overrides.surname);
 
   // Punctuation-only names ("-- --") survive cleanNamePart, which keeps hyphens
-  // and apostrophes. Share one predicate with AuthorSchema.name: a schema that
+  // and apostrophes. Share one predicate with ContributorSchema.name: a schema that
   // accepts what this throws on turns a bad import into a crash, and the
   // reverse silently admits a nameless contributor.
   if (!isUsableAuthorName(name)) {
@@ -154,6 +159,7 @@ export function createAuthor(
   }
 
   return {
+    kind: "person",
     id: overrides?.id ?? globalThis.crypto.randomUUID(),
     name,
     firstName,
@@ -173,12 +179,89 @@ export function createAuthor(
  * row has no usable name, so one bad row is skipped rather than aborting the
  * whole import.
  */
-export function tryCreateAuthor(...args: Parameters<typeof createAuthor>): Author[] {
+export function tryCreateAuthor(...args: Parameters<typeof createAuthor>): Person[] {
   try {
     return [createAuthor(...args)];
   } catch {
     return [];
   }
+}
+
+/** `createGroup` for one imported row, as a list for `flatMap`: empty when it throws. */
+export function tryCreateGroup(...args: Parameters<typeof createGroup>): Group[] {
+  try {
+    return [createGroup(...args)];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Chip text for a group: its alias, else the first letter of each word of the name, skipping a
+ * leading "The". A name of one word ("COVIDSurg", an unspaced "新冠协作组") stays whole.
+ */
+export function groupInitials(name: string, alias?: string): string {
+  if (alias?.trim()) return alias.trim();
+  const words = name.split(/\s+/).filter((word) => /\p{L}/u.test(word));
+  const kept = words.length > 1 && /^the$/i.test(words[0] ?? "") ? words.slice(1) : words;
+  if (kept.length === 1) return kept[0] ?? name.trim();
+  const letters = kept.map((word) => [...(word.match(/\p{L}/u)?.[0] ?? "")][0]?.toUpperCase() ?? "").join("");
+  return letters || name.trim();
+}
+
+/** Group members as stored: clean names without ";", no blanks, no repeated person link. */
+function cleanMembers(members: readonly Member[] | undefined): Member[] {
+  const linked = new Set<string>();
+  const out: Member[] = [];
+  for (const member of members ?? []) {
+    // CSV splits its Members cell on ";", so a name keeps none ("Smith; J" would come back as two).
+    const name = cleanText(member.name.replaceAll(";", ",")).slice(0, MAX_AUTHOR_NAME_LENGTH);
+    if (!name || out.length >= MAX_GROUP_MEMBERS) continue;
+    const personId = member.personId && !linked.has(member.personId) ? member.personId : undefined;
+    if (personId) linked.add(personId);
+    out.push(personId ? { name, personId } : { name });
+  }
+  return out;
+}
+
+/** A consortium row. Throws on an unusable name or an invalid ROR id, as `createAuthor` does. */
+export function createGroup(
+  name: string,
+  overrides?: {
+    id?: string;
+    alias?: string;
+    ror?: string;
+    members?: readonly Member[];
+    membersAre?: Group["membersAre"];
+    contactId?: string;
+    contributorType?: ContributorType;
+    contributions?: Contribution[];
+  },
+): Group {
+  name = cleanText(name);
+  if (!isUsableAuthorName(name)) throw new Error("Author name must contain at least one letter.");
+  if (name.length > MAX_AUTHOR_NAME_LENGTH) {
+    throw new Error(`Author name must be ${MAX_AUTHOR_NAME_LENGTH} characters or fewer.`);
+  }
+  if (overrides?.ror && !isValidRor(overrides.ror)) throw new Error(`Invalid ROR id: "${overrides.ror}"`);
+  const alias = overrides?.alias ? cleanText(overrides.alias).slice(0, MAX_AUTHOR_NAME_LENGTH) : "";
+  const members = cleanMembers(overrides?.members);
+  const contactId = members.some((member) => member.personId === overrides?.contactId)
+    ? overrides?.contactId
+    : undefined;
+  return {
+    kind: "group",
+    id: overrides?.id ?? globalThis.crypto.randomUUID(),
+    name,
+    initials: groupInitials(name, alias),
+    ...(alias ? { alias } : {}),
+    ...(overrides?.ror ? { ror: normalizeRor(overrides.ror) } : {}),
+    members,
+    membersAre: overrides?.membersAre ?? "collaborators",
+    ...(contactId ? { contactId } : {}),
+    contributorType: overrides?.contributorType ?? "author",
+    contributions: normalizeContributions(overrides?.contributions),
+  };
 }
 
 /**
@@ -215,7 +298,7 @@ export function normalizeContributions(contributions?: Contribution[]): Contribu
  * Assign unique initials across a list of authors without mutating the input.
  * Returns a new array of authors; the originals are left untouched.
  */
-export function deduplicateAuthorInitials(authors: Author[]): Author[] {
+export function deduplicateAuthorInitials<T extends Contributor>(authors: T[]): T[] {
   // The loop is quadratic when initials repeat; an oversized list is rejected by the caller anyway.
   if (authors.length > MAX_AUTHORS) return authors;
   const existingInitials = new Set<string>();
@@ -223,7 +306,7 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
   return authors.map((author) => {
     const initials = author.initials;
     // Continue from the letter the initials took, past any particles; a suffix is a letter, never "'" or "-".
-    const surnameCodePoints = [...surnameCore(author.surname)].filter((c) => /\p{L}/u.test(c));
+    const surnameCodePoints = [...surnameCore(isPerson(author) ? author.surname : "")].filter((c) => /\p{L}/u.test(c));
     let attempt = initials;
     let extraIdx = 1;
 
@@ -250,17 +333,32 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
  * `createAuthor` cannot rebuild. A row that comes out unchanged is returned
  * as the same object, so memoised rows and cached reviews keep it.
  */
-export function normalizeRoster(authors: Author[]): Author[] {
+export function normalizeRoster(authors: Contributor[]): Contributor[] {
   if (authors.length > MAX_AUTHORS) {
     throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
   }
+  // Ids key every lookup and must survive a share link: an imported duplicate or unshareable id gets
+  // a fresh one, and a group's link to a re-keyed person follows it.
   const seenIds = new Set<string>();
+  const renamed = new Map<string, string>();
+  const ids = authors.map((author) => {
+    const id = isShareableId(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
+    seenIds.add(id);
+    if (id !== author.id && isPerson(author) && !renamed.has(author.id)) renamed.set(author.id, id);
+    return id;
+  });
+  const link = personLink(new Set(authors.flatMap((author, i) => (isPerson(author) ? [ids[i] ?? ""] : []))), renamed);
   const rebuilt = deduplicateAuthorInitials(
-    authors.map((author) => {
-      // Ids key every lookup and must survive a share link: an imported
-      // duplicate or unshareable id gets a fresh one.
-      const id = isShareableId(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
-      seenIds.add(id);
+    authors.map((author, i) => {
+      const id = ids[i] ?? globalThis.crypto.randomUUID();
+      if (!isPerson(author)) {
+        // A link to a row that is gone, or to a group, is dropped and the member's name kept.
+        const members = author.members.map(({ name, personId }) => {
+          const linked = link(personId);
+          return linked ? { name, personId: linked } : { name };
+        });
+        return createGroup(author.name, { ...author, id, members, contactId: link(author.contactId) });
+      }
       return createAuthor(author.name, {
         id,
         orcid: author.orcid,
@@ -278,18 +376,57 @@ export function normalizeRoster(authors: Author[]): Author[] {
   });
 }
 
+/**
+ * The person a group's link names: `id` while it is a person's id in `personIds`, else the id that
+ * person was given (`renamed`, old id to new), else none.
+ */
+function personLink(personIds: ReadonlySet<string>, renamed: ReadonlyMap<string, string>) {
+  return (id: string | undefined): string | undefined => {
+    if (id === undefined || personIds.has(id)) return id;
+    const to = renamed.get(id);
+    return to && personIds.has(to) ? to : undefined;
+  };
+}
+
+/**
+ * Re-point each group's member links and contact after person rows changed id (`renamed`, old id
+ * to new). A link to a row `rows` does not hold is dropped and the member's name kept; the contact
+ * goes with its link. Rows that need no change come back as the same objects.
+ */
+export function relinkGroups(rows: Contributor[], renamed: ReadonlyMap<string, string> = new Map()): Contributor[] {
+  const link = personLink(new Set(rows.filter(isPerson).map((row) => row.id)), renamed);
+  return rows.map((row) => {
+    if (!isGroup(row)) return row;
+    const linked = new Set<string>();
+    const members = row.members.map((member) => {
+      const to = link(member.personId);
+      const personId = to && !linked.has(to) ? to : undefined;
+      if (personId) linked.add(personId);
+      if (personId === member.personId) return member;
+      return personId ? { name: member.name, personId } : { name: member.name };
+    });
+    const to = link(row.contactId);
+    const contactId = to && linked.has(to) ? to : undefined;
+    if (contactId === row.contactId && members.every((member, i) => member === row.members[i])) return row;
+    const { contactId: _old, ...rest } = row;
+    return { ...rest, members, ...(contactId ? { contactId } : {}) };
+  });
+}
+
 /** Field-by-field equality, contributions included, for the shape `createAuthor` builds. */
-function isSameAuthor(a: Author, b: Author): boolean {
-  const keys = Object.keys(b) as (keyof Author)[];
-  return (
-    Object.keys(a).length === keys.length &&
-    keys.every((key) =>
-      key === "contributions"
-        ? a.contributions.length === b.contributions.length &&
-          a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i]?.score)
-        : a[key] === b[key],
-    )
-  );
+function isSameAuthor(a: Contributor, b: Contributor): boolean {
+  const keys = Object.keys(b);
+  const same = (key: string) => {
+    if (key === "contributions") {
+      return (
+        a.contributions.length === b.contributions.length &&
+        a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i]?.score)
+      );
+    }
+    const [x, y] = [a, b].map((row) => (row as unknown as Record<string, unknown>)[key]);
+    return key === "members" ? JSON.stringify(x) === JSON.stringify(y) : x === y;
+  };
+  return Object.keys(a).length === keys.length && keys.every(same);
 }
 
 /**
@@ -302,7 +439,7 @@ function isSameAuthor(a: Author, b: Author): boolean {
  * surname the first and middle names must be the whole name. Explicit family-first
  * parts also fit when they spell the whole name, with or without spaces.
  */
-function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
+function consistentNameParts(author: Person): Pick<Person, "firstName" | "middleName" | "surname"> | undefined {
   const { name, firstName, middleName, surname } = author;
   if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
   // The word order below reads an inverted name with a suffix front to back, so it re-parses.
@@ -472,7 +609,7 @@ function splitCommaLine(line: string): string[] {
  * Parse a newline- or comma-separated string of author names into Author objects.
  * Empty lines / entries are ignored.
  */
-export function parseAuthorText(text: string): Author[] {
+export function parseAuthorText(text: string): Person[] {
   return deduplicateAuthorInitials(splitNameList(text).map((name) => createAuthor(name)));
 }
 
@@ -481,8 +618,8 @@ export function parseAuthorText(text: string): Author[] {
  * and a 2 MB file of tiny rows otherwise builds tens of thousands of people first. It counts the
  * people read, not rows, so skipped rows (editors, group wrappers, blank names) are not counted.
  */
-export function readUpToCap<T>(elements: T[], read: (element: T) => Author[]): Author[] {
-  const people: Author[] = [];
+export function readUpToCap<T, C extends Contributor = Person>(elements: T[], read: (element: T) => C[]): C[] {
+  const people: C[] = [];
   for (const element of elements) {
     if (people.length > MAX_AUTHORS) break;
     people.push(...read(element));

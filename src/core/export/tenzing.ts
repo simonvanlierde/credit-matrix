@@ -1,5 +1,5 @@
-import type { Author } from "../author";
-import { isValidOrcid } from "../author";
+import type { Contributor, Person } from "../author";
+import { isPerson, isValidOrcid, orcidOf } from "../author";
 import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
 import { cleanNamePart, deduplicateAuthorInitials, readUpToCap, tryCreateAuthor } from "../parse-authors";
 import { delimiterOf, escapeCsvFormulaOnly, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
@@ -42,8 +42,10 @@ function trueFalse(value: boolean): string {
  * The parsed parts drop punctuation and every word past the second, so
  * "Martin Luther King Jr." would come back as "Martin Luther Jr".
  */
-function nameCells(author: Author): string[] {
+function nameCells(author: Contributor): string[] {
   const name = author.name.trim().replace(/\s+/g, " ");
+  // tenzing has no group: the whole name goes in Surname, where nothing splits it.
+  if (!isPerson(author)) return ["", "", name];
   const given = givenNamesOf(author);
   // Inverted input ("Curie, Marie") has no surname after its given names; split on a word, so
   // a first name "Ann" never takes "a" from "Anna". tenzing has no suffix column, so a suffix
@@ -68,8 +70,8 @@ function nameCells(author: Author): string[] {
  * is. "'+Pat" keeps its stray apostrophe in tenzing, to protect Excel users.
  * Columns this app does not hold are left empty for the team.
  */
-export function toTenzing(authors: Author[]): string {
-  const isAuthor = (author: Author) => author.contributorType === "author";
+export function toTenzing(authors: Contributor[]): string {
+  const isAuthor = (author: Contributor) => author.contributorType === "author";
   const ordered = [...authors.filter(isAuthor), ...authors.filter((author) => !isAuthor(author))];
   const rows = ordered.map((author, index) => {
     const done = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
@@ -83,9 +85,9 @@ export function toTenzing(authors: Author[]): string {
       "",
       "",
       "",
-      author.orcid ?? "",
+      orcidOf(author) ?? "",
       "",
-      trueFalse(isAuthor(author) && author.corresponding),
+      trueFalse(isAuthor(author) && isPerson(author) && author.corresponding),
       "",
     ];
   });
@@ -104,7 +106,7 @@ function isTrue(value: string | undefined): boolean {
 }
 
 /** Read people from a tenzing sheet, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
-export function fromTenzing(text: string): Author[] {
+export function fromTenzing(text: string): Person[] {
   const trimmed = text.replace(/^﻿/, "").trim();
   const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));
   const column = new Map<string, number>();

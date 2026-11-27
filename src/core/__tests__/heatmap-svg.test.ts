@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { rolesWithContributions } from "../author";
 import * as colors from "../contributor-color";
 import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
@@ -9,13 +9,13 @@ import { GENERATOR_NOTE } from "../export/generator-note";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { createAuthor, parseAuthorText } from "../parse-authors";
 
-function setScore(author: Author, role: string, score: number): void {
+function setScore(author: Contributor, role: string, score: number): void {
   const c = author.contributions.find((x) => x.role === role);
   if (!c) throw new Error(`missing role ${role}`);
   c.score = score;
 }
 
-function authorsWithScores(): Author[] {
+function authorsWithScores(): Contributor[] {
   const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
   const [grace, charles] = authors;
   if (!(grace && charles)) throw new Error("expected 2 authors");
@@ -26,7 +26,7 @@ function authorsWithScores(): Author[] {
 }
 
 /** Cells = authors × roles that actually have a contributor. */
-function expectedCellCount(authors: Author[]): number {
+function expectedCellCount(authors: Contributor[]): number {
   return authors.length * rolesWithContributions(authors).length;
 }
 
@@ -676,7 +676,7 @@ describe("buildHeatmapSvg golden layouts", () => {
 
   it("draws an author who lacks a role's entry as no contribution", () => {
     const sparse = { ...createAuthor("Hua Luogeng"), contributions: [] };
-    const svg = buildHeatmapSvg([team()[0] as Author, sparse]);
+    const svg = buildHeatmapSvg([team()[0] as Contributor, sparse]);
     expect(svg.match(/width="22" height="22"/g)).toHaveLength(6);
   });
 

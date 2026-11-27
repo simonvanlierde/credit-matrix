@@ -1950,3 +1950,45 @@ msgstr "執筆ツール"
 
 msgid "docsOnPage"
 msgstr "このページの内容"
+
+msgid "addGroupButton"
+msgstr "グループ(コンソーシアム)を追加"
+
+msgid "groupBadge"
+msgstr "グループ"
+
+msgid "groupDetails"
+msgstr "グループの詳細"
+
+msgid "groupAliasLabel"
+msgstr "短縮名(チップと図用)"
+
+msgid "groupRorLabel"
+msgstr "ROR ID または URL"
+
+msgid "errRorInvalid"
+msgstr "有効な ROR ID ではありません。"
+
+msgid "errGroupMembersLimit"
+msgstr "1 つのグループに登録できるメンバーは最大 {limit} 名です。リストを保存するには、いくつか削除してください。"
+
+msgid "groupMembersLabel"
+msgstr "メンバー(1 行に 1 名)"
+
+msgid "groupMembersAre"
+msgstr "メンバーは"
+
+msgid "groupMembersAuthors"
+msgstr "著者"
+
+msgid "groupMembersCollaborators"
+msgstr "協力者"
+
+msgid "groupContactLabel"
+msgstr "連絡担当者(レビュー依頼に対応)"
+
+msgid "groupContactNone"
+msgstr "担当者なし"
+
+msgid "annGroupAdded"
+msgstr "{name} をグループとして追加しました。"

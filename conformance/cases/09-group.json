@@ -1,0 +1,16 @@
+{
+  "description": "A consortium credited as one contributor, with named members: a <collab> and a nested <contrib-group>.",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "roles": { "Conceptualization": "lead" }
+    },
+    {
+      "group": "The COVIDSurg Collaborative",
+      "members": ["Grace Hopper", "Alan Turing"],
+      "roles": { "Investigation": "lead", "Data curation": "equal" }
+    }
+  ]
+}

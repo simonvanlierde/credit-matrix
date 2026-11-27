@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { type Author, createAuthor, MAX_STATEMENT_LENGTH, toJson } from "@/core";
+import { type Contributor, createAuthor, MAX_STATEMENT_LENGTH, toJson } from "@/core";
 import { MAX_AUTHORS } from "@/core/author";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
@@ -54,7 +54,7 @@ function deferLookup() {
 function renderModal(
   existingContributorCount = 0,
   onLink: (url: string, current: () => boolean) => Promise<null> = async () => null,
-  { authors = [], graded = false }: { authors?: Author[]; graded?: boolean } = {},
+  { authors = [], graded = false }: { authors?: Contributor[]; graded?: boolean } = {},
 ) {
   const onImport = vi.fn();
   const onApplyStatement = vi.fn();
@@ -222,7 +222,7 @@ describe("a JSON export from a newer version", () => {
   it("says so, instead of failing validation", async () => {
     const { onImport } = renderModal(0);
     fireEvent.change(screen.getByLabelText(english.pasteRawData), {
-      target: { value: JSON.stringify({ version: 2, authors: [{ name: "Grace Hopper", future: true }] }) },
+      target: { value: JSON.stringify({ version: 3, authors: [{ name: "Grace Hopper", future: true }] }) },
     });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 
@@ -266,7 +266,7 @@ describe("accessibility and drops", () => {
   it("ties the form error to the textarea", async () => {
     renderModal(0);
     const text = screen.getByLabelText(english.pasteRawData);
-    fireEvent.change(text, { target: { value: JSON.stringify({ version: 2, authors: [] }) } });
+    fireEvent.change(text, { target: { value: JSON.stringify({ version: 3, authors: [] }) } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 
     expect(text.getAttribute("aria-invalid")).toBe("true");
@@ -309,7 +309,7 @@ describe("accessibility and drops", () => {
     await act(async () => fireEvent.change(input, { target: { files: [new File(["Grace Hopper"], "authors.csv")] } }));
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
-    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Grace Hopper"]);
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Contributor) => author.name)).toEqual(["Grace Hopper"]);
   });
 
   it("drops a file whose read settles after the dialog closed", async () => {
@@ -420,7 +420,7 @@ describe("a pasted CRediT statement", () => {
     fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(3);
-    const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    const roles = (author: Contributor) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(roles(next[3])).toEqual(["Data curation", "Software"]);
     expect(roles(next[2])).toEqual([]);
   });
@@ -560,7 +560,7 @@ describe("a pasted CRediT statement", () => {
     fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(3);
-    const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    const roles = (author: Contributor) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(next.map(roles)).toEqual([["Conceptualization", "Software"], ["Formal analysis"]]);
   });
 
@@ -595,7 +595,7 @@ describe("a pasted CRediT statement", () => {
     fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(4);
-    const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    const roles = (author: Contributor) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(next.map(roles)).toEqual([["Conceptualization", "Software", "Validation"], ["Software"]]);
   });
 
@@ -847,7 +847,9 @@ describe("import progress and outcome", () => {
     expect(document.activeElement).toBe(screen.getByLabelText(english.pasteRawData));
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
-    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Katherine Johnson"]);
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Contributor) => author.name)).toEqual([
+      "Katherine Johnson",
+    ]);
   });
 
   it("says plainly when XML cannot be read", async () => {

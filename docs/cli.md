@@ -388,16 +388,17 @@ Prints the contributions in another format. `--to` is required.
 | --- | --- | --- | --- |
 | `--to` | string | none | One of the targets below. |
 | `--yes-no` | boolean | off | Treat roles as ticks with no level. Used by `jats`, `latex-credits`, `quarto`, `svg`, `pdf`. |
+| `--jats-version` | string | `1.3` | `1.3` or `1.4`. Used by `jats`; 1.4 writes a group as `<collab-wrap>`, 1.3 as `<collab>`. |
 | `--locale` | string | `en` | Used by `md`, `svg` and `pdf`. See [Locales](#locales). |
 
 ### Targets
 
 | `--to` | Prints | Notes |
 | --- | --- | --- |
-| `json` | Native JSON export (version 1) | Keeps scores, ORCID iDs, markers and ask answers. Use it to move a roster between tools. |
-| `csv` | One row per person, one column per role | Scores 0 to 100. Also has columns for type, equal contribution and corresponding. |
-| `jats` | JATS4R `<contrib-group>` in a minimal `<article>` | Roles carry a `degree-contribution` level unless `--yes-no`. |
-| `crossref` | The `<contributors>` block of a Crossref deposit (schema 5.5.0) | Has no levels. Non-authors get the role type `other`. |
+| `json` | Native JSON export (version 2) | Keeps scores, ORCID iDs, markers and ask answers. Use it to move a roster between tools. |
+| `csv` | One row per person, one column per role | Scores 0 to 100. Also has columns for type, equal contribution and corresponding. With a group in the roster, a `Kind` column marks it `group`, and `Alias`, `ROR`, `Members` and `Members are` (`authors` or `collaborators`) columns hold the rest. |
+| `jats` | JATS4R `<contrib-group>` in a minimal `<article>` | Roles carry a `degree-contribution` level unless `--yes-no`. A group is a `<collab>` (1.3) or `<collab-wrap>` (1.4, see `--jats-version`), its members a `<contrib-group>`: nested in the `<collab-wrap>` in 1.4, after the main group and linked by an `<xref>` in 1.3 (the JATS4R rules forbid a `<contrib>` inside a `<collab>`). |
+| `crossref` | The `<contributors>` block of a Crossref deposit (schema 5.5.0) | Has no levels. Non-authors get the role type `other`. A group is an `<organization>`; Crossref has no roles for one, so they are dropped (an XML comment says so). |
 | `md` | A Markdown table of people and roles | Role names follow `--locale`. Levels shown as (Equal), (Supporting). |
 | `latex-credits` | `\credit` lines for the latex-credits package | The score divided by 100 (the app's levels give 1, 0.66 and 0.33); `--yes-no` writes 1 or 0. Authors only. Exits 1 if nobody has a role. |
 | `tenzing` | A Tenzing-style CSV table | Non-authors are marked "Acknowledgment only". |

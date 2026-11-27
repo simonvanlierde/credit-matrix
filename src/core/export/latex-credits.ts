@@ -1,4 +1,4 @@
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { GENERATOR_NOTE } from "./generator-note";
 
@@ -34,7 +34,7 @@ export function escapeLatex(s: string): string {
  * With `yesNo` (the Yes/No input mode) every role is 1 or 0.
  * With no author roles there is no `\credit` line, only a comment: credits.sty fails on none.
  */
-export function toLatexCredits(authors: Author[], { yesNo = false }: { yesNo?: boolean } = {}): string {
+export function toLatexCredits(authors: Contributor[], { yesNo = false }: { yesNo?: boolean } = {}): string {
   const listed = authors.filter((author) => author.contributorType === "author");
   const hasRoles = listed.some((author) => author.contributions.some((c) => c.score > 0));
   const lines = hasRoles

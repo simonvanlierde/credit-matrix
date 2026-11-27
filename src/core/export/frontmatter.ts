@@ -1,11 +1,11 @@
-import type { Author } from "../author";
-import { activeContributions, normalizeOrcid, scoreToLevel } from "../author";
+import type { Contributor } from "../author";
+import { activeContributions, isGroup, normalizeOrcid, orcidOf, scoreToLevel } from "../author";
 
 /**
  * YAML for Quarto/Pandoc's `author` field, with canonical CRediT names and levels.
  * `yesNo` writes role names without degrees. Non-authors are omitted, never added to the byline.
  */
-export function toQuarto(authors: Author[], { yesNo = false }: { yesNo?: boolean } = {}): string {
+export function toQuarto(authors: Contributor[], { yesNo = false }: { yesNo?: boolean } = {}): string {
   return authorYaml(authors, "author", !yesNo);
 }
 
@@ -13,11 +13,11 @@ export function toQuarto(authors: Author[], { yesNo = false }: { yesNo?: boolean
  * YAML for MyST's `authors` field. Paste under `project` in myst.yml or into page front matter.
  * MyST has no contribution levels. Non-authors are omitted, never added to the byline.
  */
-export function toMyst(authors: Author[]): string {
+export function toMyst(authors: Contributor[]): string {
   return authorYaml(authors, "authors", false);
 }
 
-function authorYaml(authors: Author[], key: "author" | "authors", levels: boolean): string {
+function authorYaml(authors: Contributor[], key: "author" | "authors", levels: boolean): string {
   const listed = authors.filter((author) => author.contributorType === "author");
   const lines = [
     "# Keep native JSON for scores, author markers and replies.",
@@ -28,7 +28,13 @@ function authorYaml(authors: Author[], key: "author" | "authors", levels: boolea
   for (const author of listed) {
     // JSON strings are YAML double-quoted scalars, including names with colons, quotes or newlines.
     lines.push(`  - name: ${JSON.stringify(author.name)}`);
-    if (author.orcid) lines.push(`    orcid: ${JSON.stringify(normalizeOrcid(author.orcid))}`);
+    // A group has no ORCID iD. `kind` lets the statement plugins name it as a group, with its alias for initials.
+    if (isGroup(author)) {
+      lines.push("    kind: group");
+      if (author.alias) lines.push(`    alias: ${JSON.stringify(author.alias)}`);
+    }
+    const orcid = orcidOf(author);
+    if (orcid) lines.push(`    orcid: ${JSON.stringify(normalizeOrcid(orcid))}`);
     const roles = activeContributions(author);
     lines.push(roles.length ? "    roles:" : "    roles: []");
     for (const { role, score } of roles) {
