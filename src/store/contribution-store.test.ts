@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { CREDIT_ROLES, createAuthor, toJson } from "@/core";
-import { MAX_AUTHORS } from "@/core/author";
+import { MAX_AUTHORS, MAX_GROUP_MEMBERS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import type { LocaleCode } from "@/core/i18n";
 import { DEFAULT_HEATMAP_SETTINGS, repairHeatmapSettings } from "@/lib/heatmap-settings";
@@ -1242,6 +1242,52 @@ describe("contribution store", () => {
       });
       expect(merged.authors[1]).not.toHaveProperty("ror");
       expect(merged.selfId).toBeNull();
+    });
+
+    it("refuses more members than a group holds, instead of cutting the list", () => {
+      const id = store().addGroup("Big Group") ?? "";
+      const members = (n: number) => Array.from({ length: n }, (_, i) => ({ name: `Member ${i}` }));
+      expect(store().updateGroup(id, { members: members(MAX_GROUP_MEMBERS + 1) })).toBe(false);
+      expect(store().authors[0]).toMatchObject({ members: [] });
+      expect(store().addGroup("Bigger Group", { members: members(MAX_GROUP_MEMBERS + 1) })).toBeNull();
+      expect(store().updateGroup(id, { members: members(MAX_GROUP_MEMBERS) })).toBe(true);
+    });
+
+    it("links a copied draft's group to the copy's rows", () => {
+      const ana = store().addAuthor("Ana Lima") ?? "";
+      store().addGroup("Study Group", { members: [{ name: "Ana Lima", personId: ana }], contactId: ana });
+      const copyId = store().duplicateDraft(store().activeDraftId) ?? "";
+      const [person, group] = store().drafts[copyId]?.authors ?? [];
+      expect(person?.id).not.toBe(ana);
+      expect(group).toMatchObject({ contactId: person?.id, members: [{ name: "Ana Lima", personId: person?.id }] });
+    });
+
+    it("re-points a stored link when the person's id is replaced", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: {
+              authors: [
+                { ...createAuthor("Ana Lima"), id: "a b" },
+                {
+                  kind: "group",
+                  id: "g1",
+                  name: "Study Group",
+                  members: [{ name: "Ana", personId: "a b" }],
+                  contactId: "a b",
+                  contributions: [],
+                },
+              ],
+            },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      const [person, group] = merged.authors;
+      expect(person?.id).not.toBe("a b");
+      expect(group).toMatchObject({ contactId: person?.id, members: [{ name: "Ana", personId: person?.id }] });
     });
 
     it("stores under version 7", () => {

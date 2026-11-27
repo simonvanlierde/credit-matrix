@@ -28,9 +28,17 @@ import {
   review,
   type Target,
 } from "@/core";
-import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
+import {
+  clampScore,
+  isShareableId,
+  isUsableAuthorName,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
+  MAX_GROUP_MEMBERS,
+} from "@/core/author";
 import { DEFAULT_MONO_COLOR, HEX_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
+import { relinkGroups } from "@/core/parse-authors";
 import { type Toolchain, ToolchainSchema } from "@/core/toolchain";
 import { type HeatmapFigureSettings, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
@@ -258,7 +266,10 @@ interface ContributionState {
   addAuthor: (name: string, orcid?: string) => string | null;
   /** Adds a group (a consortium) and returns its id; null when the name is unusable or the list is full. */
   addGroup: (name: string, fields?: GroupFields) => string | null;
-  /** Edit a group's name, alias, ROR id, members, member flag or contact. False when the row is gone, not a group, or a value is refused. */
+  /**
+   * Edit a group's name, alias, ROR id, members, member flag or contact. False when the row is gone,
+   * not a group, or a value is refused, such as more than `MAX_GROUP_MEMBERS` members.
+   */
   updateGroup: (groupId: string, fields: GroupFields & { name?: string }) => boolean;
   /** Add several in one update, in order, up to the cap; each entry's new id, or null when refused. */
   addAuthors: (entries: { name: string; orcid?: string }[]) => (string | null)[];
@@ -303,7 +314,9 @@ export interface GroupFields {
 }
 
 /** `createGroup` overrides from set fields: `null` and "" clear, `undefined` leaves the field as it is. */
+/** Throws on more than `MAX_GROUP_MEMBERS` members, which `createGroup` would cut without a word. */
 function groupOverrides(fields: GroupFields = {}): NonNullable<Parameters<typeof createGroup>[1]> {
+  if ((fields.members?.length ?? 0) > MAX_GROUP_MEMBERS) throw new Error("Too many members.");
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(fields)) {
     if (value !== undefined) out[key] = value === null || value === "" ? undefined : value;
@@ -462,10 +475,9 @@ function stashLive(state: ContributionState): void {
 function repairAuthors(authors: unknown): Contributor[] {
   if (!Array.isArray(authors)) return [];
   const seenIds = new Set<string>();
-  const personIds = new Set(
-    authors.flatMap((row) => (isRecord(row) && row.kind !== "group" && typeof row.id === "string" ? [row.id] : [])),
-  );
-  return authors
+  // A person whose id is replaced keeps the groups' links to them; links to no row are dropped after.
+  const renamed = new Map<string, string>();
+  const rows = authors
     .filter((author): author is Contributor => {
       if (author === null || typeof author !== "object") return false;
       const name = (author as { name?: unknown }).name;
@@ -486,8 +498,8 @@ function repairAuthors(authors: unknown): Contributor[] {
       if (raw.kind === "group") {
         const members = (Array.isArray(raw.members) ? raw.members : []).flatMap((member): Member[] => {
           if (!isRecord(member) || typeof member.name !== "string" || !member.name) return [];
-          // A link to a row this draft does not have costs the link, not the member.
-          return typeof member.personId === "string" && personIds.has(member.personId)
+          // A link to a row this draft does not have costs the link, not the member (relinkGroups below).
+          return typeof member.personId === "string"
             ? [{ name: member.name, personId: member.personId }]
             : [{ name: member.name }];
         });
@@ -514,6 +526,7 @@ function repairAuthors(authors: unknown): Contributor[] {
       const id =
         typeof author.id === "string" && isShareableId(author.id) && !seenIds.has(author.id) ? author.id : defaults.id;
       seenIds.add(id);
+      if (typeof author.id === "string" && id !== author.id && !renamed.has(author.id)) renamed.set(author.id, id);
       const repaired = { ...defaults, ...(author as Person) };
       for (const field of ["firstName", "middleName", "surname", "initials"] as const) {
         if (typeof repaired[field] !== "string" || repaired[field].length > MAX_AUTHOR_NAME_LENGTH)
@@ -540,6 +553,7 @@ function repairAuthors(authors: unknown): Contributor[] {
         },
       ];
     });
+  return relinkGroups(rows, renamed);
 }
 
 function isDraftClaim(value: unknown): value is DraftClaim {
@@ -1165,7 +1179,15 @@ export const useContributionStore = create<ContributionState>()(
           if (Object.keys(state.drafts).length >= MAX_DRAFTS) return;
           const source = state.drafts[draftId];
           if (!source) return;
-          const authors = source.authors.map((author) => ({ ...author, id: globalThis.crypto.randomUUID() }));
+          const renamed = new Map(source.authors.map((author) => [author.id, globalThis.crypto.randomUUID()]));
+          // The copy's groups link to the copy's rows, not the source draft's.
+          const authors = relinkGroups(
+            source.authors.map((author) => ({
+              ...author,
+              id: renamed.get(author.id) ?? globalThis.crypto.randomUUID(),
+            })),
+            renamed,
+          );
           const selfIndex = source.authors.findIndex((author) => author.id === source.selfId);
           const copy: Draft = {
             ...source,
