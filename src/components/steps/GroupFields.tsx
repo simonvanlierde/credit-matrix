@@ -1,11 +1,14 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { type Group, isPerson, isValidRor } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_GROUP_MEMBERS } from "@/core/author";
+import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 
-const FIELD =
-  "w-full rounded border border-edge bg-surface-bright px-2 py-1 text-xs text-on-surface outline-none focus:ring-2 focus:ring-primary read-only:opacity-70 disabled:opacity-60";
+const SELECT =
+  "w-full rounded border border-edge bg-surface-bright px-2 py-1 text-xs text-on-surface outline-none focus:ring-2 focus:ring-primary disabled:opacity-60";
+// Not on a <select>: it always matches :read-only, and the dimmed text fails contrast.
+const FIELD = `${SELECT} read-only:opacity-70`;
 
 /** One member per line, as the textarea shows them. */
 const toText = (members: Group["members"]) => members.map((member) => member.name).join("\n");
@@ -25,6 +28,7 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
   const [alias, setAlias] = useState(group.alias ?? "");
   const [ror, setRor] = useState(group.ror ? `https://ror.org/${group.ror}` : "");
   const [rorInvalid, setRorInvalid] = useState(false);
+  const [tooManyMembers, setTooManyMembers] = useState(false);
   const [membersText, setMembersText] = useState(toText(group.members));
   const membersRef = useRef<HTMLTextAreaElement>(null);
   const ids = [useId(), useId(), useId(), useId(), useId()] as const;
@@ -52,7 +56,9 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
     }
     const valid = isValidRor(value);
     setRorInvalid(!valid);
-    if (valid) updateGroup(group.id, { ror: value });
+    // Focus has left the field, so the message below it alone goes unheard.
+    if (!valid) announce(t("errRorInvalid"), { assertive: true });
+    else updateGroup(group.id, { ror: value });
   }
 
   function commitMembers() {
@@ -63,13 +69,20 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean)
-      .slice(0, MAX_GROUP_MEMBERS)
       .map((name) => {
         const personId = links.get(name);
         links.delete(name);
         return personId ? { name, personId } : { name };
       });
-    updateGroup(group.id, { members });
+    saveMembers({ members });
+  }
+
+  /** Save a member list, or say why it was refused: the store takes no more than the cap. */
+  function saveMembers(fields: { members: Group["members"]; contactId?: string }) {
+    const tooMany = fields.members.length > MAX_GROUP_MEMBERS;
+    setTooManyMembers(tooMany);
+    if (tooMany) announce(t("errGroupMembersLimit", { limit: MAX_GROUP_MEMBERS }), { assertive: true });
+    else updateGroup(group.id, fields);
   }
 
   /** The contact is a person row, so choosing one links a member to it: a member with the name, else a new one. */
@@ -85,7 +98,7 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
       : group.members.some((m) => m.name === person.name && !m.personId)
         ? group.members.map((m) => (m.name === person.name && !m.personId ? { ...m, personId } : m))
         : [...group.members, { name: person.name, personId }];
-    updateGroup(group.id, { members, contactId: personId });
+    saveMembers({ members, contactId: personId });
   }
 
   return (
@@ -141,11 +154,18 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
             value={membersText}
             rows={3}
             readOnly={rowLocked}
+            aria-invalid={tooManyMembers}
+            aria-describedby={tooManyMembers ? `${membersId}-error` : undefined}
             onChange={(event) => setMembersText(event.target.value)}
             onBlur={commitMembers}
             className={FIELD}
           />
         </label>
+        {tooManyMembers && (
+          <p id={`${membersId}-error`} className="text-error">
+            {t("errGroupMembersLimit", { limit: MAX_GROUP_MEMBERS })}
+          </p>
+        )}
         <label htmlFor={areId} className="flex flex-col gap-0.5">
           {t("groupMembersAre")}
           <select
@@ -153,7 +173,7 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
             value={group.membersAre}
             disabled={rowLocked}
             onChange={(event) => updateGroup(group.id, { membersAre: event.target.value as Group["membersAre"] })}
-            className={FIELD}
+            className={SELECT}
           >
             <option value="authors">{t("groupMembersAuthors")}</option>
             <option value="collaborators">{t("groupMembersCollaborators")}</option>
@@ -167,7 +187,7 @@ export function GroupFields({ group, rowLocked }: { group: Group; rowLocked: boo
               value={group.contactId ?? ""}
               disabled={rowLocked}
               onChange={(event) => chooseContact(event.target.value)}
-              className={FIELD}
+              className={SELECT}
             >
               <option value="">{t("groupContactNone")}</option>
               {people.map((person) => (

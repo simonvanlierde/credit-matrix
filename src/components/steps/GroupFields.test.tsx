@@ -1,10 +1,15 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isGroup } from "@/core";
+import { MAX_GROUP_MEMBERS } from "@/core/author";
+import { announce } from "@/lib/announce";
 import { IntlProvider } from "@/lib/translations";
 import { messages } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
+import { GroupFields } from "./GroupFields";
+
+vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 
 const group = () => {
   const found = useContributionStore.getState().authors.find(isGroup);
@@ -14,6 +19,7 @@ const group = () => {
 
 describe("a group row", () => {
   beforeEach(async () => {
+    vi.mocked(announce).mockClear();
     localStorage.clear();
     await useContributionStore.persist.rehydrate();
     useContributionStore.setState({ welcomeOpen: false, welcomeSeen: true });
@@ -60,6 +66,57 @@ describe("a group row", () => {
     fireEvent.change(input, { target: { value: "nonsense" } });
     fireEvent.blur(input);
     expect(screen.getByText("That is not a valid ROR id.")).toBeTruthy();
-    act(() => undefined);
+    expect(group().ror).toBe("05dxps055");
+    expect(announce).toHaveBeenCalledWith("That is not a valid ROR id.", { assertive: true });
+    fireEvent.change(input, { target: { value: "" } });
+    fireEvent.blur(input);
+    expect(group()).not.toHaveProperty("ror");
+    expect(screen.queryByText("That is not a valid ROR id.")).toBeNull();
+  });
+
+  it("keeps a member's link to a person row while the name stays in the list", () => {
+    const person = useContributionStore.getState().authors.find((a) => !isGroup(a));
+    fireEvent.change(screen.getByLabelText("Contact person (answers review requests)"), {
+      target: { value: person?.id },
+    });
+    const members = screen.getByLabelText("Members (one name per line)");
+    fireEvent.change(members, { target: { value: "Ada Lovelace\nGrace Hopper" } });
+    fireEvent.blur(members);
+    expect(group().members).toEqual([{ name: "Ada Lovelace" }, { name: "Grace Hopper", personId: person?.id }]);
+    expect(group().contactId).toBe(person?.id);
+  });
+
+  it("refuses more members than a group holds, and says so", () => {
+    const members = screen.getByLabelText("Members (one name per line)");
+    const names = Array.from({ length: MAX_GROUP_MEMBERS + 1 }, (_, i) => `Member ${i}`).join("\n");
+    fireEvent.change(members, { target: { value: names } });
+    fireEvent.blur(members);
+    expect(group().members).toEqual([]);
+    const message = `A group holds at most ${MAX_GROUP_MEMBERS} members. Remove some to save the list.`;
+    expect(screen.getByText(message)).toBeTruthy();
+    expect(members.getAttribute("aria-invalid")).toBe("true");
+    expect(announce).toHaveBeenCalledWith(message, { assertive: true });
+  });
+});
+
+describe("a locked group row", () => {
+  afterEach(cleanup);
+
+  it("shows its fields read-only and does not dim its selects as read-only", () => {
+    useContributionStore.getState().loadAuthors([]);
+    useContributionStore.getState().addAuthor("Grace Hopper");
+    useContributionStore.getState().addGroup("Study Group");
+    render(
+      <IntlProvider locale="en" messages={messages}>
+        <GroupFields group={group()} rowLocked />
+      </IntlProvider>,
+    );
+    for (const label of ["Short name (chips and figure)", "ROR id or URL", "Members (one name per line)"])
+      expect(screen.getByLabelText(label).hasAttribute("readonly")).toBe(true);
+    for (const label of ["Members are", "Contact person (answers review requests)"]) {
+      const select = screen.getByLabelText(label);
+      expect(select.hasAttribute("disabled")).toBe(true);
+      expect(select.className).not.toContain("read-only:");
+    }
   });
 });

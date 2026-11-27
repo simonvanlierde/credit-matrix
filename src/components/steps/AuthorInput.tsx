@@ -403,7 +403,11 @@ export function AuthorList() {
         // The typed name as a group: one contributor for a consortium, with its members listed inside.
         <button
           type="button"
-          onClick={handleAddGroup}
+          onClick={() => {
+            handleAddGroup();
+            // A successful add empties the field and removes this button, which would drop focus to the page.
+            addInputRef.current?.focus();
+          }}
           className="mt-1 flex min-h-6 items-center gap-1.5 self-start rounded text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Users className="h-3.5 w-3.5" aria-hidden="true" />

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { type Contributor, CREDIT_ROLES, createAuthor } from "@/core";
+import { type Contributor, CREDIT_ROLES, createAuthor, createGroup } from "@/core";
 import { announce } from "@/lib/announce";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
@@ -241,4 +241,19 @@ it("drops the bulk Undo once the roster changes another way, so it cannot restor
   expect(screen.queryByText(english.bulkChangeApplied)).toBeNull();
   expect(screen.queryByRole("button", { name: english.undo })).toBeNull();
   expect(store().authors[0]?.name).toBe("Ada Lovelace");
+});
+
+it("names a group's head by the alias it shows, when the full name does not hold it", () => {
+  act(() => {
+    store().loadAuthors([
+      createGroup("The COVIDSurg Collaborative", { alias: "CSC" }),
+      createGroup("The Alpha Group", { alias: "Alpha" }),
+    ]);
+    useContributionStore.setState({ initials: false });
+  });
+  renderGrid();
+  const heads = [...document.querySelectorAll("[data-name-head]")].map((head) => head.getAttribute("aria-label"));
+  expect(heads).toContain("CSC, The COVIDSurg Collaborative");
+  expect(heads).toContain("The Alpha Group");
+  expect(screen.getAllByText("CSC").length).toBeGreaterThan(0);
 });

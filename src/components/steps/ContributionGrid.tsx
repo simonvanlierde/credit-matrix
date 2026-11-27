@@ -51,6 +51,12 @@ type AskState = { kind: "you" | "asked" | "settled" | "none" } | { kind: "differ
  * columns (or transposed), every cell a toggle. This doubles as the live
  * heatmap: cell fills use the same color scale as the downloadable SVG/PNG.
  */
+/** A head's accessible name: a group's head shows its alias, which a voice user names it by (WCAG 2.5.3). */
+function withShownName(author: Contributor): string {
+  const shown = shortName(author);
+  return author.name.toLowerCase().includes(shown.toLowerCase()) ? author.name : `${shown}, ${author.name}`;
+}
+
 export function ContributionGrid() {
   const { authors, inputMode, setInputMode, heatmapMonoColor, setAuthorScore, toggleContribution, welcomeOpen } =
     useContributionStore(
@@ -433,7 +439,7 @@ export function ContributionGrid() {
           // Named by the person alone: a column header names every cell under it, so "Actions for …"
           // here would be read before each cell. An initials head says its initials first, so a voice
           // user can name the button by what it shows (WCAG 2.5.3).
-          aria-label={initials ? `${author.initials}, ${author.name}` : author.name}
+          aria-label={initials ? `${author.initials}, ${author.name}` : withShownName(author)}
           onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
           className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
         >

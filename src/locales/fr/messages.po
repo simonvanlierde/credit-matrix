@@ -1969,6 +1969,9 @@ msgstr "Identifiant ou URL ROR"
 msgid "errRorInvalid"
 msgstr "Ce n'est pas un identifiant ROR valide."
 
+msgid "errGroupMembersLimit"
+msgstr "Un groupe compte au maximum {limit} membres. Supprimez-en pour enregistrer la liste."
+
 msgid "groupMembersLabel"
 msgstr "Membres (un nom par ligne)"
 

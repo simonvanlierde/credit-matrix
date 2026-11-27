@@ -1969,6 +1969,9 @@ msgstr "ROR ID 或网址"
 msgid "errRorInvalid"
 msgstr "这不是有效的 ROR ID。"
 
+msgid "errGroupMembersLimit"
+msgstr "一个小组最多可包含 {limit} 位成员。请先移除一些成员，再保存列表。"
+
 msgid "groupMembersLabel"
 msgstr "成员(每行一个姓名)"
 
