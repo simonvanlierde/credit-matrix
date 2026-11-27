@@ -187,7 +187,9 @@ whose terms forbid redistribution, so it is hashed but never copied into the rel
 limited to CC BY and CC0 articles by the export's filter. `census release --verify` re-reads the folder
 against its hashes and re-hashes the bulk files in `--cache`, and exits 1 when any file or input changed.
 It needs the optional group: `uv sync --group release` (the `dev` group has it). sourceledger copies every
-recorded file twice (about 340 GB for the full corpus), so release a small database for now.
+recorded file twice (about 340 GB for the full corpus), so release a small database for now. A release goes into a new `--out`: a rerun needs another one. A
+killed run leaves a `.<snapshot>.part` folder next to it, safe to delete. `--work` holds the raw copies of
+the bulk files, which are restricted: never upload it.
 
 `census aggregate` writes the counts the app's census page shows to `public/data/census.json` (about
 10 KB, committed): research articles and those with roles per year, roles per author, styles per

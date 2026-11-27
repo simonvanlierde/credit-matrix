@@ -193,6 +193,13 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 
 def cmd_release(args: argparse.Namespace) -> None:
+    try:
+        _release(args)
+    except (FileExistsError, FileNotFoundError, ImportError, ValueError) as error:  # ValueError: ReleaseError too
+        raise Failure(str(error)) from error
+
+
+def _release(args: argparse.Namespace) -> None:
     out = args.out or DATA / "release" / args.snapshot
     if args.verify:
         if problems := release.verify(out, args.cache):

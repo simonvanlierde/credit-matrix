@@ -19,10 +19,12 @@ REPO = "https://github.com/simonvanlierde/credit-matrix"
 INPUTS = "inputs.csv"
 """The bulk files' names, sizes and sha256, shipped so a recipient can check their own copies."""
 PREFIX = "bulk-"
+# The statements keep each article's own licence: CC BY of any version, or CC0 (export.OPEN_LICENCE).
+CC_BY_MIXED = "CC-BY-4.0 AND CC-BY-3.0 AND CC-BY-2.0 AND CC0-1.0"
 OUTPUTS = {
     "articles": ("articles.parquet", "CC0-1.0", "CC0 1.0"),
     "assignments": ("assignments.parquet", "CC0-1.0", "CC0 1.0"),
-    "statements": ("statements.parquet", "CC-BY-4.0", "CC BY 4.0, each row keeps its article's licence"),
+    "statements": ("statements.parquet", CC_BY_MIXED, "CC BY 4.0, each row keeps its article's licence"),
     "meta": ("meta.json", "CC0-1.0", "CC0 1.0"),
     "readme": ("README.md", "CC0-1.0", "CC0 1.0"),
     "inputs": (INPUTS, "CC0-1.0", "CC0 1.0"),
@@ -54,6 +56,16 @@ def release(
     units = con.execute(
         "SELECT unit, size, sha256 FROM units WHERE finished AND sha256 IS NOT NULL ORDER BY unit"
     ).fetchall()
+    if not units:
+        raise ValueError("no finished unit with a sha256 in the database: nothing to list in inputs.csv")
+    listed = {unit for (unit, _, _) in units}
+    articles = stage / "articles.parquet"
+    exported = {
+        r[0]
+        for r in con.execute(f"SELECT DISTINCT source_unit FROM '{articles}' WHERE source_unit IS NOT NULL").fetchall()
+    }
+    if missing := sorted(exported - listed):
+        raise ValueError(f"articles come from {', '.join(missing)}, which has no finished unit with a sha256")
     with (stage / INPUTS).open("w", newline="") as fh:
         csv.writer(fh, lineterminator="\n").writerows([("unit", "bytes", "sha256"), *units])
     generic = {**_input("x.xml.gz", name), "name": "Europe PMC open-access bulk files, listed in inputs.csv"}
@@ -107,7 +119,8 @@ def _output(key: str, snapshot: str) -> dict:
         "id": key,
         "name": f"CRediT census {file}",
         "status": "implemented",
-        # NOTE: sourceledger wants a URL per source and takes the raw file's extension from it.
+        # NOTE: sourceledger wants a URL per source and names the release file from its path's extension, so
+        # the path must end in the real file name. No GitHub page resolves that way, so this link is a label.
         "url": f"{REPO}/tree/main/census/{snapshot}/{file}",
         "vintage": snapshot,
         "terms": terms,
@@ -123,7 +136,12 @@ def _output(key: str, snapshot: str) -> dict:
 def verify(out: Path, cache: Path) -> list[str]:
     """Problems with a release folder: its files against datapackage.json, then each bulk file in `cache`
     against the sha256 in the release's inputs.csv."""
-    problems = _sourceledger().verify(out)
+    sl = _sourceledger()
+    problems = sl.verify(out)
+    try:
+        problems += sl.check_release(out)[0]  # SHA256SUMS and the metadata files: catches a stray file
+    except (sl.ValidatorMissing, sl.ValidatorCouldNotRun) as error:
+        problems.append(f"release not fully checked: {error}")
     with (out / "data" / INPUTS).open(newline="") as fh:
         for row in csv.DictReader(fh):
             path = cache / row["unit"]
