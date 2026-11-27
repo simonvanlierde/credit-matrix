@@ -3,7 +3,7 @@ import type { Ask } from "../ask";
 import { AskSchema } from "../ask";
 import type { Contributor } from "../author";
 import { ContributorSchema, MAX_AUTHORS } from "../author";
-import { normalizeContributions } from "../parse-authors";
+import { normalizeContributions, relinkGroups } from "../parse-authors";
 import { type Toolchain, ToolchainSchema } from "../toolchain";
 
 /**
@@ -110,7 +110,10 @@ export function fromJson(json: string): {
   const toolchain = ToolchainSchema.safeParse(result.data.toolchain).data;
   return {
     // A file may repeat or reorder roles; every export reads contributions by position.
-    authors: authors.map((author) => ({ ...author, contributions: normalizeContributions(author.contributions) })),
+    // A group's link to an id that names no person in the file is dropped, as `normalizeRoster` drops it.
+    authors: relinkGroups(
+      authors.map((author) => ({ ...author, contributions: normalizeContributions(author.contributions) })),
+    ),
     ...(asks ? { asks } : {}),
     ...(selfId ? { selfId } : {}),
     ...(toolchain ? { toolchain } : {}),

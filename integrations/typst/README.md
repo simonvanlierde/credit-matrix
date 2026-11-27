@@ -98,7 +98,7 @@ The output has the same form as the sample above: each person's roles, with leve
 
 A consortium is an entry with `kind: "group"`: `(name: "The COVIDSurg Collaborative", kind: "group", alias: "COVIDSurg", roles: (investigation: true))`.
 The statement prints the name; the heatmap labels it with the alias when there is one, and its chip is the
-alias, else the first letters of the name without a leading "The". The app's JSON export is read the same way.
+alias, else the first letters of the name without a leading "The" (a one-word name stays whole). The app's JSON export is read the same way.
 
 ### Contributors
 

@@ -102,7 +102,7 @@ export declare class CreditMatrixElement extends HTMLElement {
   render(): Promise<void>;
 }
 // figures.d.ts
-import { c as Contributor, n as HeatmapSvgOptions } from "./heatmap-svg.js";
+import { n as HeatmapSvgOptions, u as Contributor } from "./heatmap-svg.js";
 /**
  * A figure font face: Latin, Japanese, Simplified Chinese and the other scripts in sans and serif (Korean
  * in sans only), and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays
@@ -401,6 +401,44 @@ declare const ContributorSchema: z.ZodMiniDiscriminatedUnion<[z.ZodMiniObject<{
   contactId: z.ZodMiniOptional<z.ZodMiniString<string>>;
 }, z.core.$strip>], "kind">;
 type Person = z.infer<typeof PersonSchema>;
+/** @deprecated Use Person (or Contributor for a row that may be a group). */
+type Author = Person;
+/** @deprecated Use PersonSchema (or ContributorSchema for a row that may be a group). */
+declare const AuthorSchema: z.ZodMiniObject<{
+  kind: z.ZodMiniDefault<z.ZodMiniLiteral<"person">>;
+  id: z.ZodMiniDefault<z.ZodMiniString<string>>;
+  name: z.ZodMiniString<string>;
+  firstName: z.ZodMiniString<string>;
+  middleName: z.ZodMiniString<string>;
+  surname: z.ZodMiniString<string>;
+  initials: z.ZodMiniString<string>;
+  orcid: z.ZodMiniOptional<z.ZodMiniPipe<z.ZodMiniString<string>, z.ZodMiniTransform<string, string>>>;
+  contributorType: z.ZodMiniDefault<z.ZodMiniEnum<{
+    author: "author";
+    "non-author": "non-author";
+  }>>;
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  equalContribution: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+  corresponding: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+}, z.core.$strip>;
 /**
  * The person-only fields, typed as always absent on a group, so `row.orcid` or `row.corresponding`
  * reads as `undefined` on any contributor without a `kind` check. The schema strips them from a group.
@@ -517,12 +555,12 @@ declare function heatmapDescription(authors: Contributor[], opts?: HeatmapSvgOpt
  * who did what. Assistive technology reads both and nothing draws them.
  */
 declare function buildHeatmapSvg(authors: Contributor[], opts?: HeatmapSvgOptions): string;
-export { isValidOrcid as C, orcidOf as D, normalizeRor as E, scoreToLevel as O, isPerson as S, normalizeOrcid as T, Member as _, Contribution as a, PersonSchema as b, Contributor as c, Group as d, GroupSchema as f, MAX_IMPORT_BYTES as g, MAX_GROUP_MEMBERS as h, heatmapDescription as i, shortName as k, ContributorSchema as l, MAX_AUTHOR_NAME_LENGTH as m, HeatmapSvgOptions as n, ContributionLevel as o, MAX_AUTHORS as p, buildHeatmapSvg as r, ContributionSchema as s, HeatmapOptionError as t, ContributorType as u, MemberSchema as v, isValidRor as w, isGroup as x, Person as y };
+export { scoreToLevel as A, isGroup as C, normalizeOrcid as D, isValidRor as E, normalizeRor as O, PersonSchema as S, isValidOrcid as T, MAX_GROUP_MEMBERS as _, Author as a, MemberSchema as b, ContributionLevel as c, ContributorSchema as d, ContributorType as f, MAX_AUTHOR_NAME_LENGTH as g, MAX_AUTHORS as h, heatmapDescription as i, shortName as j, orcidOf as k, ContributionSchema as l, GroupSchema as m, HeatmapSvgOptions as n, AuthorSchema as o, Group as p, buildHeatmapSvg as r, Contribution as s, HeatmapOptionError as t, Contributor as u, MAX_IMPORT_BYTES as v, isPerson as w, Person as x, Member as y };
 // i18n.d.ts
 import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
 export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
 // index.d.ts
-import { C as isValidOrcid, D as orcidOf, E as normalizeRor, O as scoreToLevel, S as isPerson, T as normalizeOrcid, _ as Member, a as Contribution, b as PersonSchema, c as Contributor, d as Group, f as GroupSchema, g as MAX_IMPORT_BYTES, h as MAX_GROUP_MEMBERS, i as heatmapDescription, k as shortName, l as ContributorSchema, m as MAX_AUTHOR_NAME_LENGTH, n as HeatmapSvgOptions, o as ContributionLevel, p as MAX_AUTHORS, r as buildHeatmapSvg, s as ContributionSchema, t as HeatmapOptionError, u as ContributorType, v as MemberSchema, w as isValidRor, x as isGroup, y as Person } from "./heatmap-svg.js";
+import { A as scoreToLevel, C as isGroup, D as normalizeOrcid, E as isValidRor, O as normalizeRor, S as PersonSchema, T as isValidOrcid, _ as MAX_GROUP_MEMBERS, a as Author, b as MemberSchema, c as ContributionLevel, d as ContributorSchema, f as ContributorType, g as MAX_AUTHOR_NAME_LENGTH, h as MAX_AUTHORS, i as heatmapDescription, j as shortName, k as orcidOf, l as ContributionSchema, m as GroupSchema, n as HeatmapSvgOptions, o as AuthorSchema, p as Group, r as buildHeatmapSvg, s as Contribution, t as HeatmapOptionError, u as Contributor, v as MAX_IMPORT_BYTES, w as isPerson, x as Person, y as Member } from "./heatmap-svg.js";
 import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
@@ -1298,14 +1336,18 @@ interface XmlElement {
   readonly textContent: string | null;
   /** Browser and linkedom elements have both. Without `localName` a Crossref `<organization>` reads as nothing. */
   readonly localName?: string;
-  /** Text nodes are `nodeType` 3; a group's name is the text of its `<collab>` outside the member list. */
-  readonly childNodes?: ArrayLike<{
-    readonly nodeType: number;
-    readonly textContent: string | null;
-  }>;
+  /** A group's name is the text of its `<collab>` outside the member list. */
+  readonly childNodes?: ArrayLike<XmlNode>;
   getAttribute(name: string): string | null;
   querySelector(selectors: string): XmlElement | null;
   querySelectorAll(selectors: string): ArrayLike<XmlElement>;
+}
+/** A DOM node: text is `nodeType` 3, an element 1. */
+interface XmlNode {
+  readonly nodeType: number;
+  readonly textContent: string | null;
+  readonly localName?: string;
+  readonly childNodes?: ArrayLike<XmlNode>;
 }
 /** A `DOMParser`: the browser's own, or linkedom's in Node. */
 interface XmlParser {
@@ -1627,7 +1669,10 @@ export declare function createAuthor(name: string, overrides?: {
   middleName?: string;
   surname?: string;
 }): Person;
-/** Chip text for a group: its alias, else the first letter of each word of the name, skipping a leading "The". */
+/**
+ * Chip text for a group: its alias, else the first letter of each word of the name, skipping a
+ * leading "The". A name of one word ("COVIDSurg", an unspaced "新冠协作组") stays whole.
+ */
 export declare function groupInitials(name: string, alias?: string): string;
 /** A consortium row. Throws on an unusable name or an invalid ROR id, as `createAuthor` does. */
 export declare function createGroup(name: string, overrides?: {
@@ -1724,6 +1769,9 @@ export declare function decodeShareHash(hash: string): Promise<ShareData | null>
 interface StatementAuthor {
   given: string;
   surname: string;
+  /** A group: matched on its whole name (in `surname`) or its alias, never on initials. */
+  group?: boolean;
+  alias?: string;
 }
 /**
  * A contributor's name split the way the parser needs it. The given names are everything in the
@@ -1733,6 +1781,7 @@ interface StatementAuthor {
 export declare function statementAuthor(author: {
   name: string;
   kind?: "person" | "group";
+  alias?: string;
   firstName?: string;
   middleName?: string;
   surname?: string;
@@ -1777,7 +1826,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type Contributor, ContributorSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type Group, GroupSchema, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type JatsVersion, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_GROUP_MEMBERS, MAX_IMPORT_BYTES, type Member, MemberSchema, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Person, PersonSchema, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type Toolchain, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isGroup, isPerson, isValidOrcid, isValidRor, normalizeOrcid, normalizeRor, orcidOf, scoreToLevel, shortName };
+export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type Contributor, ContributorSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type Group, GroupSchema, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type JatsVersion, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_GROUP_MEMBERS, MAX_IMPORT_BYTES, type Member, MemberSchema, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Person, PersonSchema, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type Toolchain, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isGroup, isPerson, isValidOrcid, isValidRor, normalizeOrcid, normalizeRor, orcidOf, scoreToLevel, shortName };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

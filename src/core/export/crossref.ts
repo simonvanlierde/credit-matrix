@@ -35,7 +35,7 @@ export function toCrossrefContributors(authors: Contributor[]): string {
       .filter(unplaceable)
       .map(
         (author) =>
-          `  <!-- Left out: ${escapeXml(author.name)} is a group credited only in the Acknowledgements, and Crossref has no such role for an organization. -->`,
+          `  <!-- Left out: ${commentText(author.name)} is a group credited only in the Acknowledgements, and Crossref has no such role for an organization. -->`,
       ),
     ...named.map((author) =>
       isGroup(author) ? organizationToXml(author, author === firstAuthor) : personToXml(author, author === firstAuthor),
@@ -47,11 +47,16 @@ ${people}
 </contributors>`;
 }
 
+/** Text for inside an XML comment, which may not hold "--". */
+function commentText(text: string): string {
+  return escapeXml(text).replace(/-{2,}/g, "-");
+}
+
 function organizationToXml(group: Group, first: boolean): string {
   const roles = activeContributions(group).map((c) => c.role);
   const dropped =
     roles.length > 0
-      ? `  <!-- Roles of ${escapeXml(group.name)} dropped: Crossref gives an organization no CRediT roles (${escapeXml(roles.join("; "))}). -->\n`
+      ? `  <!-- Roles of ${commentText(group.name)} dropped: Crossref gives an organization no CRediT roles (${escapeXml(roles.join("; "))}). -->\n`
       : "";
   return `${dropped}  <organization sequence="${first ? "first" : "additional"}" contributor_role="author">${escapeXml(group.name)}</organization>`;
 }

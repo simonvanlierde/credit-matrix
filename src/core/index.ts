@@ -24,8 +24,18 @@ export {
   review,
   settledAt,
 } from "./ask";
-export type { Contribution, ContributionLevel, Contributor, ContributorType, Group, Member, Person } from "./author";
+export type {
+  Author,
+  Contribution,
+  ContributionLevel,
+  Contributor,
+  ContributorType,
+  Group,
+  Member,
+  Person,
+} from "./author";
 export {
+  AuthorSchema,
   ContributionSchema,
   ContributorSchema,
   GroupSchema,

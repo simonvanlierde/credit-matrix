@@ -1,5 +1,6 @@
 import type { Contribution, Contributor, ContributorType, Group, Member, Person } from "./author";
 import {
+  isGroup,
   isPerson,
   isShareableId,
   isUsableAuthorName,
@@ -195,21 +196,26 @@ export function tryCreateGroup(...args: Parameters<typeof createGroup>): Group[]
   }
 }
 
-/** Chip text for a group: its alias, else the first letter of each word of the name, skipping a leading "The". */
+/**
+ * Chip text for a group: its alias, else the first letter of each word of the name, skipping a
+ * leading "The". A name of one word ("COVIDSurg", an unspaced "新冠协作组") stays whole.
+ */
 export function groupInitials(name: string, alias?: string): string {
   if (alias?.trim()) return alias.trim();
   const words = name.split(/\s+/).filter((word) => /\p{L}/u.test(word));
   const kept = words.length > 1 && /^the$/i.test(words[0] ?? "") ? words.slice(1) : words;
+  if (kept.length === 1) return kept[0] ?? name.trim();
   const letters = kept.map((word) => [...(word.match(/\p{L}/u)?.[0] ?? "")][0]?.toUpperCase() ?? "").join("");
   return letters || name.trim();
 }
 
-/** Group members as stored: clean names, no blanks, no repeated person link. */
+/** Group members as stored: clean names without ";", no blanks, no repeated person link. */
 function cleanMembers(members: readonly Member[] | undefined): Member[] {
   const linked = new Set<string>();
   const out: Member[] = [];
   for (const member of members ?? []) {
-    const name = cleanText(member.name).slice(0, MAX_AUTHOR_NAME_LENGTH);
+    // CSV splits its Members cell on ";", so a name keeps none ("Smith; J" would come back as two).
+    const name = cleanText(member.name.replaceAll(";", ",")).slice(0, MAX_AUTHOR_NAME_LENGTH);
     if (!name || out.length >= MAX_GROUP_MEMBERS) continue;
     const personId = member.personId && !linked.has(member.personId) ? member.personId : undefined;
     if (personId) linked.add(personId);
@@ -331,20 +337,27 @@ export function normalizeRoster(authors: Contributor[]): Contributor[] {
   if (authors.length > MAX_AUTHORS) {
     throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
   }
+  // Ids key every lookup and must survive a share link: an imported duplicate or unshareable id gets
+  // a fresh one, and a group's link to a re-keyed person follows it.
   const seenIds = new Set<string>();
-  const personIds = new Set(authors.filter(isPerson).map((author) => author.id));
+  const renamed = new Map<string, string>();
+  const ids = authors.map((author) => {
+    const id = isShareableId(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
+    seenIds.add(id);
+    if (id !== author.id && isPerson(author) && !renamed.has(author.id)) renamed.set(author.id, id);
+    return id;
+  });
+  const link = personLink(new Set(authors.flatMap((author, i) => (isPerson(author) ? [ids[i] ?? ""] : []))), renamed);
   const rebuilt = deduplicateAuthorInitials(
-    authors.map((author) => {
-      // Ids key every lookup and must survive a share link: an imported
-      // duplicate or unshareable id gets a fresh one.
-      const id = isShareableId(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
-      seenIds.add(id);
+    authors.map((author, i) => {
+      const id = ids[i] ?? globalThis.crypto.randomUUID();
       if (!isPerson(author)) {
         // A link to a row that is gone, or to a group, is dropped and the member's name kept.
-        const members = author.members.map(({ name, personId }) =>
-          personId && personIds.has(personId) ? { name, personId } : { name },
-        );
-        return createGroup(author.name, { ...author, id, members });
+        const members = author.members.map(({ name, personId }) => {
+          const linked = link(personId);
+          return linked ? { name, personId: linked } : { name };
+        });
+        return createGroup(author.name, { ...author, id, members, contactId: link(author.contactId) });
       }
       return createAuthor(author.name, {
         id,
@@ -360,6 +373,43 @@ export function normalizeRoster(authors: Contributor[]): Contributor[] {
   return rebuilt.map((author, index) => {
     const original = authors[index];
     return original && isSameAuthor(original, author) ? original : author;
+  });
+}
+
+/**
+ * The person a group's link names: `id` while it is a person's id in `personIds`, else the id that
+ * person was given (`renamed`, old id to new), else none.
+ */
+function personLink(personIds: ReadonlySet<string>, renamed: ReadonlyMap<string, string>) {
+  return (id: string | undefined): string | undefined => {
+    if (id === undefined || personIds.has(id)) return id;
+    const to = renamed.get(id);
+    return to && personIds.has(to) ? to : undefined;
+  };
+}
+
+/**
+ * Re-point each group's member links and contact after person rows changed id (`renamed`, old id
+ * to new). A link to a row `rows` does not hold is dropped and the member's name kept; the contact
+ * goes with its link. Rows that need no change come back as the same objects.
+ */
+export function relinkGroups(rows: Contributor[], renamed: ReadonlyMap<string, string> = new Map()): Contributor[] {
+  const link = personLink(new Set(rows.filter(isPerson).map((row) => row.id)), renamed);
+  return rows.map((row) => {
+    if (!isGroup(row)) return row;
+    const linked = new Set<string>();
+    const members = row.members.map((member) => {
+      const to = link(member.personId);
+      const personId = to && !linked.has(to) ? to : undefined;
+      if (personId) linked.add(personId);
+      if (personId === member.personId) return member;
+      return personId ? { name: member.name, personId } : { name: member.name };
+    });
+    const to = link(row.contactId);
+    const contactId = to && linked.has(to) ? to : undefined;
+    if (contactId === row.contactId && members.every((member, i) => member === row.members[i])) return row;
+    const { contactId: _old, ...rest } = row;
+    return { ...rest, members, ...(contactId ? { contactId } : {}) };
   });
 }
 

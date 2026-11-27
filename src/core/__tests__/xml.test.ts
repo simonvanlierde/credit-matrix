@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { MAX_AUTHORS } from "../author";
+import { MAX_AUTHORS, MAX_GROUP_MEMBERS, MAX_IMPORT_BYTES } from "../author";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml, readPerson, XmlParseError } from "../export/xml-import";
@@ -545,5 +545,22 @@ describe("reading stops one past the contributor cap", () => {
 
   it("reads no more than one author past the cap, which every caller then refuses", () => {
     expect(fromJats4rXml(jats(MAX_AUTHORS + 50))).toHaveLength(MAX_AUTHORS + 1);
+  });
+
+  it("reads a file of group contribs that all name one long member list in under a second", () => {
+    // Half the byte cap of group contribs, each linked to the other half: one shared member list.
+    const holder = '<contrib contrib-type="author"><collab>X</collab><xref ref-type="other" rid="g"/></contrib>';
+    const member = "<contrib><string-name>A</string-name></contrib>";
+    const fanOut = `<article><front><article-meta><contrib-group>${holder.repeat(
+      Math.floor(MAX_IMPORT_BYTES / 2 / holder.length),
+    )}</contrib-group><contrib-group id="g">${member.repeat(
+      Math.floor((MAX_IMPORT_BYTES / 2 - 200) / member.length),
+    )}</contrib-group></article-meta></front></article>`;
+    expect(fanOut.length).toBeLessThanOrEqual(MAX_IMPORT_BYTES);
+    const start = performance.now();
+    const groups = fromJats4rXml(fanOut);
+    expect(performance.now() - start).toBeLessThan(1000);
+    expect(groups).toHaveLength(MAX_AUTHORS + 1);
+    expect(groups[0]).toHaveProperty("members.length", MAX_GROUP_MEMBERS);
   });
 });

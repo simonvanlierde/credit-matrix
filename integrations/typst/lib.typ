@@ -104,10 +104,12 @@
 }
 
 // Chip text for a group: its alias, else the first letter of each word of the name, skipping a leading "The".
+// A name of one word stays whole, as groupInitials keeps it.
 #let _group-initials(name, alias) = {
   if alias != none and alias.trim() != "" { return alias.trim() }
   let words = name.split(regex("\s+")).filter(_has-letter)
   let kept = if words.len() > 1 and lower(words.first()) == "the" { words.slice(1) } else { words }
+  if kept.len() == 1 { return kept.first() }
   let letters = kept.map(w => {
     let first = w.codepoints().find(c => c.match(regex("\p{L}")) != none)
     if upper(first).codepoints().len() == 1 { upper(first) } else { first }

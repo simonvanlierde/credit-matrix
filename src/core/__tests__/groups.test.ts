@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ContributorSchema, isValidRor, MAX_GROUP_MEMBERS, normalizeRor } from "../author";
+import { ContributorSchema, isGroup, isValidRor, MAX_GROUP_MEMBERS, normalizeRor, type Person } from "../author";
 import { toCodemeta } from "../export/codemeta";
 import { fromCrossrefContributors, toCrossrefContributors } from "../export/crossref";
 import { fromCsv, toCsv } from "../export/csv";
@@ -11,10 +11,12 @@ import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
 import { generateStatement } from "../generate-statement";
 import { importAny } from "../import";
+import { type Author, AuthorSchema, PersonSchema } from "../index";
 import { keepKnownIds, newContributors } from "../merge-row";
 import { createAuthor, createGroup, groupInitials, normalizeRoster } from "../parse-authors";
 import { decodeShareHash, encodeShareHash } from "../share-link";
 import { fromSharePayload, toSharePayload } from "../share-payload";
+import { parseStatement, statementAuthor } from "../statement";
 
 // Caltech's ROR id: a real one, so the checksum is tested against a published value.
 const ROR = "05dxps055";
@@ -45,7 +47,38 @@ describe("group model", () => {
     expect(groupInitials("The COVIDSurg Collaborative")).toBe("CC");
     expect(groupInitials("COVIDSurg Collaborative")).toBe("CC");
     expect(groupInitials("The COVIDSurg Collaborative", "COVIDSurg")).toBe("COVIDSurg");
-    expect(groupInitials("The")).toBe("T");
+    expect(groupInitials("The")).toBe("The");
+  });
+
+  it("keeps a one-word or unspaced name whole as chip text", () => {
+    expect(groupInitials("COVIDSurg")).toBe("COVIDSurg");
+    expect(groupInitials("The Lancet")).toBe("Lancet");
+    expect(groupInitials("新冠协作组")).toBe("新冠协作组");
+  });
+
+  it("keeps the deprecated Author names as aliases of Person", () => {
+    const ada: Author = createAuthor("Ada Lovelace");
+    const person: Person = ada;
+    expect(AuthorSchema).toBe(PersonSchema);
+    expect(AuthorSchema.parse(person)).toEqual(ada);
+  });
+
+  it("re-points a link to a person whose id is replaced, and drops one to no row", () => {
+    const [person, group] = normalizeRoster([
+      createAuthor("Ada Lovelace", { id: "a b" }),
+      createGroup("Group", {
+        members: [
+          { name: "Ada", personId: "a b" },
+          { name: "Gone", personId: "gone" },
+        ],
+        contactId: "a b",
+      }),
+    ]);
+    expect(person?.id).not.toBe("a b");
+    expect(group).toMatchObject({
+      members: [{ name: "Ada", personId: person?.id }, { name: "Gone" }],
+      contactId: person?.id,
+    });
   });
 
   it("is a discriminated union on kind, and a row without kind is a person", () => {
@@ -92,6 +125,23 @@ describe("group model", () => {
     expect(createGroup("Big Group", { members }).members).toHaveLength(MAX_GROUP_MEMBERS);
   });
 
+  it("keeps a re-imported group's links when its person takes an id already here", () => {
+    const here = [createAuthor("Ada Lovelace", { id: "xada" })];
+    const file = [
+      createAuthor("Ada Lovelace", { id: "ada" }),
+      createGroup("Group", {
+        id: "g",
+        members: [{ name: "Ada Lovelace", personId: "ada" }, { name: "Zed" }],
+        contactId: "ada",
+      }),
+    ];
+    const replaced = normalizeRoster(keepKnownIds(here, file));
+    expect(replaced[1]).toMatchObject({ members: [{ personId: "xada" }, { name: "Zed" }], contactId: "xada" });
+    const [added] = newContributors(here, file);
+    expect(added).toMatchObject({ kind: "group", members: [{ personId: "xada" }, { name: "Zed" }], contactId: "xada" });
+    expect(normalizeRoster([...here, ...newContributors(here, file)])[1]).toMatchObject({ contactId: "xada" });
+  });
+
   it("never matches a person when merging an import", () => {
     const person = createAuthor("Ada Lovelace");
     const group = createGroup("Ada Lovelace");
@@ -113,6 +163,25 @@ describe("statements", () => {
   });
 });
 
+describe("pasted statements", () => {
+  const roster = () =>
+    normalizeRoster([createGroup("Alpha Consortium", { alias: "ALPHA" }), createAuthor("Ben Smith")]).map(
+      statementAuthor,
+    );
+
+  it("match a group on its name or alias, never on initials", () => {
+    expect(parseStatement("A: Software", roster()).assignments).toEqual([]);
+    expect(parseStatement("A.C.: Software", roster()).assignments).toEqual([]);
+    expect(parseStatement("Alpha Consortium: Software", roster()).assignments).toEqual([
+      { author: 0, role: "Software" },
+    ]);
+    expect(parseStatement("ALPHA: Software; B.S.: Methodology", roster()).assignments).toEqual([
+      { author: 0, role: "Software" },
+      { author: 1, role: "Methodology" },
+    ]);
+  });
+});
+
 describe("JSON export", () => {
   it("writes version 2 and reads a group back whole", () => {
     const roster = [createAuthor("Ada Lovelace", { id: "ada" }), covid()];
@@ -129,6 +198,19 @@ describe("JSON export", () => {
 
   it("imports through importAny", async () => {
     expect((await importAny(toJson([covid()]))).authors[0]).toMatchObject({ kind: "group", ror: ROR });
+  });
+
+  it("drops a link or contact that names no person in the file", () => {
+    const file = JSON.parse(toJson([createAuthor("Ada Lovelace", { id: "ada" }), covid()]));
+    file.authors[1].members = [
+      { name: "A", personId: "ghost" },
+      { name: "Ada", personId: "ada" },
+    ];
+    file.authors[1].contactId = "nobody";
+    const [, group] = fromJson(JSON.stringify(file)).authors;
+    expect(group).toMatchObject({ members: [{ name: "A" }, { name: "Ada", personId: "ada" }] });
+    expect(group).not.toHaveProperty("contactId");
+    expect(group).not.toHaveProperty("members.0.personId");
   });
 });
 
@@ -196,6 +278,38 @@ describe("JATS", () => {
     expect(fromJats4rXml(xml)).toHaveLength(2);
   });
 
+  it("gives no two 1.4 member lists the same id", () => {
+    const xml = toJats4rXml([covid(), createGroup("Beta Group", { members: [{ name: "Zed" }] })], {
+      jatsVersion: "1.4",
+    });
+    const ids = [...xml.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(fromJats4rXml(xml).map((a) => (isGroup(a) ? a.members : []))).toEqual([
+      [{ name: "Ada Lovelace" }, { name: "Smith, Jones & Lee" }],
+      [{ name: "Zed" }],
+    ]);
+  });
+
+  it("reads a group name with inline markup whole", () => {
+    const read = (contrib: string) =>
+      fromJats4rXml(
+        `<article><front><article-meta><contrib-group><contrib contrib-type="author">${contrib}</contrib></contrib-group></article-meta></front></article>`,
+      ).map((a) => [a.kind, a.name]);
+    expect(read("<collab>The <italic>Foo</italic> Consortium</collab>")).toEqual([["group", "The Foo Consortium"]]);
+    expect(read("<collab><institution>COVIDSurg</institution></collab>")).toEqual([["group", "COVIDSurg"]]);
+    expect(
+      read(
+        '<collab-wrap><collab-name><named-content content-type="x">X</named-content> Group</collab-name><contrib-group><contrib><string-name>Ann</string-name></contrib></contrib-group></collab-wrap>',
+      ),
+    ).toEqual([["group", "X Group"]]);
+    // Older files nest the member list in the <collab>: its names are not part of the group's.
+    expect(
+      read(
+        "<collab>Old Group<contrib-group><contrib><string-name>Ann</string-name></contrib></contrib-group></collab>",
+      ),
+    ).toEqual([["group", "Old Group"]]);
+  });
+
   it("marks a collaborator group, and a non-author one as a contributor", () => {
     const group = createGroup("Study Group", { members: [{ name: "Ana" }], contributorType: "non-author" });
     const xml = toJats4rXml([group]);
@@ -223,6 +337,17 @@ describe("Crossref", () => {
     const xml = toCrossrefContributors([createGroup("Helpers", { contributorType: "non-author" })]);
     expect(xml).not.toContain("<organization");
     expect(xml).toContain("Left out: Helpers");
+  });
+
+  it("writes no double hyphen inside a comment, which XML forbids", () => {
+    const xml = toCrossrefContributors([
+      createGroup("Alpha -- Beta", { contributions: [{ role: "Software", score: 100 }] }),
+      createGroup("Gamma --- Delta", { contributorType: "non-author" }),
+    ]);
+    const comments = [...xml.matchAll(/<!--(.*?)-->/gs)].map((match) => match[1] ?? "");
+    expect(comments.join("")).toContain("Alpha - Beta");
+    expect(comments.join("")).toContain("Gamma - Delta");
+    expect(comments.filter((text) => text.includes("--") || text.endsWith("-"))).toEqual([]);
   });
 });
 
@@ -285,6 +410,17 @@ describe("tabular formats", () => {
       ror: ROR,
       members: [{ name: "Ada Lovelace" }, { name: "Smith, Jones & Lee" }],
     });
+  });
+
+  it("round-trips Members are, and never splits a member name on a semicolon", () => {
+    const group = createGroup("Study Group", {
+      members: [{ name: "Smith; J" }, { name: "Roe" }],
+      membersAre: "authors",
+    });
+    expect(group.members.map((m) => m.name)).toEqual(["Smith, J", "Roe"]);
+    const [back] = fromCsv(toCsv([group]));
+    expect(back).toMatchObject({ membersAre: "authors", members: [{ name: "Smith, J" }, { name: "Roe" }] });
+    expect(fromCsv(toCsv([createGroup("Other Group")]))[0]).toMatchObject({ membersAre: "collaborators" });
   });
 
   it("keeps the columns of a roster of people unchanged", () => {

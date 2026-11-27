@@ -5,6 +5,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
   ".": [
     "ASK_TARGETS",
     "AskSchema",
+    "AuthorSchema",
     "CREDIT_ROLES",
     "ContributionSchema",
     "ContributorSchema",

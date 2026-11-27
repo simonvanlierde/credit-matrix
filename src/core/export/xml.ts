@@ -172,16 +172,18 @@ function groupToXml(group: Group, withLevels: boolean, version: JatsVersion, mem
   const rorEl = group.ror
     ? `\n      <contrib-id contrib-id-type="ror">https://ror.org/${escapeXml(group.ror)}</contrib-id>`
     : "";
+  const nested = version === "1.4";
+  // Only 1.3 links the list by id; a nested list needs none, and a shared one breaks the DTD's ID rule.
+  const id = nested ? "" : ` id="${membersId}"`;
   const members =
     group.members.length === 0
       ? ""
-      : `<contrib-group id="${membersId}" content-type="${group.membersAre}">${group.members
+      : `<contrib-group${id} content-type="${group.membersAre}">${group.members
           .map(
             (member) => `<contrib contrib-type="author"><string-name>${escapeXml(member.name)}</string-name></contrib>`,
           )
           .join("")}</contrib-group>`;
   const name = escapeXml(group.name);
-  const nested = version === "1.4";
   const collab = nested
     ? `<collab-wrap><collab-name>${name}</collab-name>${members}</collab-wrap>`
     : `<collab>${name}</collab>`;

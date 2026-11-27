@@ -53,9 +53,12 @@ Commands:
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
   convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|pdf|quarto|myst|ro-crate [--yes-no] [--locale <code>]
+      [--jats-version 1.3|1.4]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
+      --jats-version 1.4 writes a group's members inside a <collab-wrap>;
+      the default 1.3 lists them in a contrib-group after the authors.
       --locale sets the language of the md role names and the figure labels.
       crossref prints the <contributors> block of a Crossref deposit (schema
       5.5.0), which has no levels.

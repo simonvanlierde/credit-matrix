@@ -216,6 +216,10 @@ export const GroupSchema = /* @__PURE__ */ (() =>
 export const ContributorSchema = /* @__PURE__ */ (() => z.discriminatedUnion("kind", [PersonSchema, GroupSchema]))();
 
 export type Person = z.infer<typeof PersonSchema>;
+/** @deprecated Use Person (or Contributor for a row that may be a group). */
+export type Author = Person;
+/** @deprecated Use PersonSchema (or ContributorSchema for a row that may be a group). */
+export const AuthorSchema = PersonSchema;
 /**
  * The person-only fields, typed as always absent on a group, so `row.orcid` or `row.corresponding`
  * reads as `undefined` on any contributor without a `kind` check. The schema strips them from a group.

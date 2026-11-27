@@ -16,7 +16,7 @@ import {
 } from "@/core";
 import { cast } from "@/core/__tests__/cast";
 import * as i18n from "@/core/i18n";
-import { createGroup, deduplicateAuthorInitials } from "@/core/parse-authors";
+import { createGroup, deduplicateAuthorInitials, groupInitials } from "@/core/parse-authors";
 import { heatmapRecipe } from "@/lib/heatmap-recipe";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { renderTypstTranslations } from "../../scripts/build-typst-translations.mjs";
@@ -344,6 +344,14 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
       names.map((name) => createAuthor(name).initials),
       deduplicateAuthorInitials(collision.map((name) => createAuthor(name))).map((a) => a.initials),
     ]);
+  });
+
+  it("gives each group the chip text the app gives it", () => {
+    const names = ["The COVIDSurg Collaborative", "COVIDSurg", "The Lancet", "The", "新冠协作组", "Study Group 2"];
+    const calls = names.map((name) => `_group-initials(${JSON.stringify(name)}, none)`);
+    const run = typst("eval", `import "lib.typ": *; (${calls.join(", ")},)`);
+    expect(run.status, run.stderr).toBe(0);
+    expect(JSON.parse(run.stdout)).toEqual(names.map((name) => groupInitials(name)));
   });
 
   it("takes an export's stored name parts while they fit, and a document's own initials as written", () => {

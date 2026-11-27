@@ -13,8 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and the heatmap, an optional ROR id, optional members and a contact person who answers review
   requests. It has no ORCID, sign-in or corresponding flag. Statements print its name as written
   ("The COVIDSurg Collaborative: Investigation."). The package exports `Contributor`, `Person`,
-  `Group`, `createGroup`, `isGroup`, `isPerson` and `shortName`; `AuthorSchema` is now
-  `PersonSchema`, with `GroupSchema` and `ContributorSchema` beside it.
+  `Group`, `createGroup`, `isGroup`, `isPerson` and `shortName`, and `PersonSchema`, `GroupSchema`
+  and `ContributorSchema`.
 - Groups in every export: JATS `<collab>` (1.3) or `<collab-wrap>` (1.4, `--jats-version 1.4`) with
   members as a `<contrib-group>` (nested in 1.4, linked by `<xref>` in 1.3), CodeMeta and RO-Crate `Organization` with `alternateName`
   and a ROR `@id`, Crossref `<organization>` (roles dropped), Tenzing with the whole name as the
@@ -51,6 +51,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The JSON export is version 2 (version 1 files still import), the share link is version 3
   (version 2 links still open), and saved drafts migrate to storage version 7.
+- The package's readers (`fromJson`, `fromCsv`, `fromJats4rXml`, `importAny` and the rest) and
+  `normalizeRoster` now return `Contributor[]`, a person or a group per row, so `surname` and
+  `firstName` can be `undefined`; narrow with `isPerson`. `Author` and `AuthorSchema` are
+  deprecated aliases of `Person` and `PersonSchema`, kept for this release.
 - The [census page](https://credit.duinlab.nl/census) now counts roles that the census's encoder
   reads from free-text statements, including statements in prose ("A.B. designed the study"), which
   the rule parser read as giving no roles. Publisher tags and per-author role lists are read as

@@ -81,7 +81,7 @@ optional `orcid`), a `contributorType`, and a fixed array of 14 **`Contribution`
 CRediT role.
 
 A **`Group`** is a consortium such as "The COVIDSurg Collaborative": one `name`, an optional `alias` (the
-chip and heatmap label; the default chip skips a leading "The"), an optional `ror` id (format and
+chip and heatmap label; the default chip skips a leading "The" and keeps a one-word name whole), an optional `ror` id (format and
 check digits only, no lookup), optional `members` (names, each optionally tied to a person row by
 `personId`), `membersAre` (`authors` or `collaborators`) and a `contactId`, the person row that
 answers review requests. A group has no ORCID, name parts or corresponding flag, and no per-member

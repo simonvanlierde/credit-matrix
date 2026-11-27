@@ -14,8 +14,13 @@ const KIND_HEADER = "Kind";
 const ALIAS_HEADER = "Alias";
 const ROR_HEADER = "ROR";
 const MEMBERS_HEADER = "Members";
-const GROUP_HEADERS = [KIND_HEADER, ALIAS_HEADER, ROR_HEADER, MEMBERS_HEADER];
-/** Between members in the Members cell; names are split on it again, so a comma in a name is safe. */
+/** "authors" or "collaborators", as `Group.membersAre`. */
+const MEMBERS_ARE_HEADER = "Members are";
+const GROUP_HEADERS = [KIND_HEADER, ALIAS_HEADER, ROR_HEADER, MEMBERS_HEADER, MEMBERS_ARE_HEADER];
+/**
+ * Between members in the Members cell; names are split on it again, so a comma in a name is safe.
+ * A member name never holds one: `createGroup` replaces it.
+ */
 const MEMBER_SEPARATOR = "; ";
 
 const BASE_HEADERS = [NAME_HEADER, ORCID_HEADER, TYPE_HEADER, EQUAL_HEADER, CORRESPONDING_HEADER];
@@ -194,8 +199,9 @@ export function toCsv(authors: Contributor[]): string {
                 author.alias ?? "",
                 author.ror ? `https://ror.org/${author.ror}` : "",
                 author.members.map((m) => m.name).join(MEMBER_SEPARATOR),
+                author.membersAre,
               ]
-            : ["person", "", "", ""]
+            : ["person", "", "", "", ""]
           : []),
         ...CREDIT_ROLES.map((role) => String(contributionByRole.get(role.name) ?? 0)),
       ]
@@ -238,6 +244,7 @@ export function fromCsv(csv: string): Contributor[] {
   const aliasIndex = headers.indexOf(headerKey(ALIAS_HEADER));
   const rorIndex = headers.indexOf(headerKey(ROR_HEADER));
   const membersIndex = headers.indexOf(headerKey(MEMBERS_HEADER));
+  const membersAreIndex = headers.indexOf(headerKey(MEMBERS_ARE_HEADER));
   const roleIndexes = CREDIT_ROLES.map((role) => headers.indexOf(headerKey(role.name)));
 
   // A row with no usable name is skipped, as JATS import skips a nameless
@@ -271,6 +278,7 @@ export function fromCsv(csv: string): Contributor[] {
           .split(";")
           .map((member) => ({ name: member.trim() }))
           .filter((member) => member.name),
+        membersAre: headerKey(cells[membersAreIndex] ?? "") === "authors" ? "authors" : "collaborators",
       });
     }
 
