@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, seedStorage } from "./helpers";
+import { asReturningVisitor, scan, seedStorage } from "./helpers";
 
 const ORCID = "0000-0002-1825-0097";
 const PERSON_URL = `https://pub.orcid.org/v3.0/${ORCID}/person`;
@@ -42,7 +42,43 @@ test.describe("the contributor list", () => {
     await expect(page.getByLabel("Short name (chips and figure)")).toHaveValue("CovidSurg");
     await page.getByLabel("ROR id or URL").fill("nonsense");
     await page.getByLabel("ROR id or URL").press("Enter");
-    await expect(page.getByText("That is not a valid ROR id.")).toBeVisible();
+    await expect(page.locator("p", { hasText: "That is not a valid ROR id." })).toBeVisible();
+  });
+
+  test("a group keeps its members and contact over a reload, by keyboard and with no axe findings", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await add(page, "Ada Lovelace");
+    await addField(page).fill("The COVIDSurg Collaborative");
+    // The button goes once the field empties: focus returns to the field, not the page.
+    await page.getByRole("button", { name: "Add a group (consortium or collaborative)" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(addField(page)).toBeFocused();
+    await expect(addField(page)).toHaveValue("");
+
+    const members = page.getByLabel("Members (one name per line)");
+    await members.fill("Ada Lovelace\nZed Zhang");
+    await members.press("Tab");
+    await page.getByLabel("Members are").selectOption("authors");
+    await page.getByLabel("Contact person (answers review requests)").selectOption({ label: "Ada Lovelace" });
+    const ror = page.getByLabel("ROR id or URL");
+    await ror.fill("nonsense");
+    await ror.press("Tab");
+    await expect.poll(() => statusText(page)).toContain("That is not a valid ROR id.");
+    await ror.fill("");
+    await ror.press("Tab");
+
+    // The selects are not dimmed as read-only, which failed contrast.
+    expect((await scan(page)).violations).toEqual([]);
+
+    await page.reload();
+    await page.getByText("Group details").click();
+    await expect(page.getByLabel("Members (one name per line)")).toHaveValue("Ada Lovelace\nZed Zhang");
+    await expect(page.getByLabel("Members are")).toHaveValue("authors");
+    await expect(page.getByLabel("Contact person (answers review requests)").locator("option:checked")).toHaveText(
+      "Ada Lovelace",
+    );
   });
 
   test("keeps the name typed with an ORCID iD", async ({ page }) => {
