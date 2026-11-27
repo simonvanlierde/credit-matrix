@@ -74,7 +74,7 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
     roles = ", ".join(f"count(*) FILTER (list_contains(roles, '{role}')) AS \"{role}\"" for role in ROLES)
     fields: dict[str, dict] = {
         name: {"articles": n, "authors": dict.fromkeys(POSITIONS, 0), "shares": dict.fromkeys(POSITIONS)}
-        for name, n in sorted(articles.items(), key=lambda kv: -kv[1])
+        for name, n in sorted(articles.items(), key=lambda kv: (-kv[1], kv[0]))
     }
     for field, position, authors, *counts in con.execute(QUERY.format(articles=ARTICLES, roles=roles)).fetchall():
         if field not in fields:
