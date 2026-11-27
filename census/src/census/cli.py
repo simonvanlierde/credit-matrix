@@ -4,7 +4,7 @@ Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
   3. census model predict --corpus, then census model apply (the encoder's roles for free text)
-  4. census report, export, aggregate, norms, label or score (census openalex first, to score OpenAlex too)
+  4. census report, export, release, aggregate, norms, label or score (census openalex first, to score OpenAlex too)
   5. census model split, dataset, score, zero-shot, train or predict
 """
 
@@ -34,6 +34,7 @@ from census import (
     pipeline,
     pmc_s3,
     readers,
+    release,
     runinfo,
     snapshot,
     store,
@@ -188,6 +189,27 @@ def cmd_export(args: argparse.Namespace) -> None:
     out = args.out or DATA / "export" / args.snapshot
     with store.connect(_db(args), read_only=True) as con:
         counts = export.export(con, out, args.snapshot, partial=args.partial)
+    print(f"{out}: " + ", ".join(f"{v} {k}" for k, v in counts.items()))
+
+
+def cmd_release(args: argparse.Namespace) -> None:
+    try:
+        _release(args)
+    except (FileExistsError, FileNotFoundError, ImportError, ValueError) as error:  # ValueError: ReleaseError too
+        raise Failure(str(error)) from error
+
+
+def _release(args: argparse.Namespace) -> None:
+    out = args.out or DATA / "release" / args.snapshot
+    if args.verify:
+        if problems := release.verify(out, args.cache):
+            raise Failure("\n".join(problems))
+        print(f"{out}: intact, bulk files match inputs.csv")
+        return
+    with store.connect(_db(args), read_only=True) as con:
+        counts = release.release(
+            con, out, args.snapshot, args.cache, args.work or DATA / "ledger" / args.snapshot, args.partial
+        )
     print(f"{out}: " + ", ".join(f"{v} {k}" for k, v in counts.items()))
 
 
@@ -687,6 +709,21 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--partial", action="store_true", help="export even with unfinished units or no fields")
     cmd.add_argument("--out", type=Path, help="directory (default: census/data/export/<snapshot>)")
     cmd.set_defaults(func=cmd_export)
+    cmd = sub.add_parser(
+        "release",
+        parents=[snap, db],
+        help="export with sourceledger: hashes of the bulk files behind it, and no restricted source",
+    )
+    cmd.add_argument("--partial", action="store_true", help="release even with unfinished units or no fields")
+    cmd.add_argument("--out", type=Path, help="new directory (default: census/data/release/<snapshot>)")
+    cmd.add_argument("--cache", type=Path, default=DATA / "bulk", help="where the bulk files are kept")
+    cmd.add_argument(
+        "--work", type=Path, help="sourceledger's raw copies and log (default: census/data/ledger/<snapshot>)"
+    )
+    cmd.add_argument(
+        "--verify", action="store_true", help="check an existing release and the bulk files, write nothing"
+    )
+    cmd.set_defaults(func=cmd_release)
     cmd = sub.add_parser("aggregate", parents=[snap, db], help="write the counts the app's census page shows")
     cmd.add_argument("--partial", action="store_true", help="aggregate even with unfinished units or no fields")
     cmd.add_argument("--out", type=Path, help="JSON path (default: public/data/census.json in the app)")

@@ -345,8 +345,12 @@ dev = [
     { name = "pytest" },
     { name = "pytest-codspeed" },
     { name = "ruff" },
+    { name = "sourceledger" },
     { name = "ty" },
     { name = "types-lxml" },
+]
+release = [
+    { name = "sourceledger" },
 ]
 tracking = [
     { name = "alembic" },
@@ -382,9 +386,11 @@ dev = [
     { name = "pytest", specifier = ">=9.1" },
     { name = "pytest-codspeed", specifier = ">=5.0.3" },
     { name = "ruff", specifier = ">=0.17" },
+    { name = "sourceledger", specifier = ">=0.6" },
     { name = "ty", specifier = ">=0.0.86" },
     { name = "types-lxml", specifier = ">=2026.2.16" },
 ]
+release = [{ name = "sourceledger", specifier = ">=0.6" }]
 tracking = [
     { name = "alembic", specifier = ">=1.16" },
     { name = "mlflow-skinny", specifier = ">=3.17" },
@@ -2077,6 +2083,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1f/52/ee5646b65d98a252e807ccc37725363942372a4113072e0bce7ed22f8b84/soupsieve-4.1.1.tar.gz", hash = "sha256:b296bd2d2f65b1a78149f3d7bf6736a147d2c9e2dfbde0e4404639d748a02e03", size = 169784, upload-time = "2026-11-14T17:23:32.467Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/65/7fae69a095696195334a934eab23aeb12e2715e6c3f08025d2f91942750e/soupsieve-4.1.1-py3-none-any.whl", hash = "sha256:8ff3422dab0b720fb667ee79864d80531a0e57994a13eb701697719ffcb751f6", size = 55089, upload-time = "2026-11-14T17:23:31.001Z" },
+]
+
+[[package]]
+name = "sourceledger"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/9c/7067c45d4698bb10919874befdae2fb7c7ce254bce109e76f3b7d374712d/sourceledger-0.6.0.tar.gz", hash = "sha256:a884359a23559fbfb1da19f79b244758d23f03fc63934689b25cf1c1b97c9960", size = 65147, upload-time = "2026-11-15T22:50:00.238Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/75/f91df713c07704d51e37097378b0784acbc2559875e440fb1980be913412/sourceledger-0.6.0-py3-none-any.whl", hash = "sha256:2c8046b13a842d80dae8bbf4c8a32e4c9c1893625c51fdfe7c5eb6958b8cd4f9", size = 70112, upload-time = "2026-11-15T22:49:58.894Z" },
 ]
 
 [[package]]

@@ -179,6 +179,18 @@ Bare ORCIDs are personal data under the GDPR; they are published for research on
 practices. Export refuses a database with unfinished units or no fields unless told it is partial,
 and replaces the previous export only once the new one is written.
 
+`census release` writes the same export as a [sourceledger](https://github.com/simonvanlierde/sourceledger)
+release folder (`data/release/<snapshot>`): the export's files under `data/`, with `datapackage.json`
+and `SHA256SUMS`, plus `inputs.csv` (each Europe PMC bulk file's name, size and sha256) and
+`attribution.md`. Each bulk file is recorded in sourceledger's log (`data/ledger/<snapshot>`) as a source
+whose terms forbid redistribution, so it is hashed but never copied into the release. Statement text stays
+limited to CC BY and CC0 articles by the export's filter. `census release --verify` re-reads the folder
+against its hashes and re-hashes the bulk files in `--cache`, and exits 1 when any file or input changed.
+It needs the optional group: `uv sync --group release` (the `dev` group has it). sourceledger copies every
+recorded file twice (about 340 GB for the full corpus), so release a small database for now. A release goes into a new `--out`: a rerun needs another one. A
+killed run leaves a `.<snapshot>.part` folder next to it, safe to delete. `--work` holds the raw copies of
+the bulk files, which are restricted: never upload it.
+
 `census aggregate` writes the counts the app's census page shows to `public/data/census.json` (about
 10 KB, committed): research articles and those with roles per year, roles per author, styles per
 year, fields and the 20 largest publishers in the last full year, the share of authors with roles

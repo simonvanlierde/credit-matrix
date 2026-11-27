@@ -22,11 +22,16 @@ browser = [
 ]
 dev = [
   "numpy>=2.5.5",
+  { include-group = "release" },
   "pytest>=9.1",
   "pytest-codspeed>=5.0.3",
   "ruff>=0.17",
   "ty>=0.0.86",
   "types-lxml>=2026.2.16",
+]
+# census release: sourceledger's record of the bulk files behind an export, and its release folder.
+release = [
+  "sourceledger>=0.6",
 ]
 tracking = [
   "alembic>=1.16",
