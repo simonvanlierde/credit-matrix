@@ -4,7 +4,7 @@ What I plan to work on next. It is a plan, not a promise: CRediT Matrix has one 
 ([GOVERNANCE.md](../GOVERNANCE.md)), and the order changes when users report problems. Each item
 links to the issue that tracks it, and shipped changes are in the [changelog](../CHANGELOG.md).
 
-Last reviewed: 2026-11-26
+Last reviewed: 2026-11-27
 
 ## Now
 
@@ -24,11 +24,10 @@ Last reviewed: 2026-11-26
 
 - **Replies without copy and paste**, through an optional end-to-end encrypted relay ([#281](https://github.com/simonvanlierde/credit-matrix/issues/281),
   [ADR 0004](adr/0004-encrypted-relay.md)). It waits until people other than me ask for it.
-- **The census on an orchestrator**: one asset per step, partitioned by monthly snapshot, in place
-  of chained timers ([#214](https://github.com/simonvanlierde/credit-matrix/issues/214)).
 
 ## Not planned
 
 - Accounts or server-side storage of drafts ([ADR 0002](adr/0002-no-accounts-or-server-side-storage.md)).
+- An orchestrator for the census, until it has a second recurring job ([#214](https://github.com/simonvanlierde/credit-matrix/issues/214)).
 
 To suggest something, open an issue. [CONTRIBUTING.md](../CONTRIBUTING.md) says how to send a change.
