@@ -3,6 +3,7 @@ import { Inspector } from "@/components/Inspector";
 import { LabelledSection } from "@/components/LabelledSection";
 import { AuthorList } from "@/components/steps/AuthorInput";
 import { ContributionGrid } from "@/components/steps/ContributionGrid";
+import { WebMcpRegistrar } from "@/components/WebMcpRegistrar";
 import { WelcomeCard } from "@/components/WelcomeCard";
 import { homeDescription, webApplicationJsonLd } from "@/lib/json-ld";
 
@@ -20,6 +21,7 @@ export default function HomePage() {
         // biome-ignore lint/security/noDangerouslySetInnerHtml: a constant built at build time, no user input
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationJsonLd) }}
       />
+      <WebMcpRegistrar />
       <ClaimGate>
         <div className="desk:flex desk:h-full desk:flex-col">
           <WelcomeCard />
