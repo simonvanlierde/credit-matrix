@@ -63,8 +63,7 @@ export type FigureFace =
 export type FigureFontProvider = (face: FigureFace) => Uint8Array | Promise<Uint8Array>;
 
 /**
- * A `font` family a figure cannot use: not found, installed only as a web font (WOFF), or a variable font
- * whose default instance is not the upright regular one.
+ * A font family or file a figure cannot read or use.
  */
 export class FigureFontFileError extends Error {
   override readonly name = "FigureFontFileError";

@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { brotliCompressSync, constants as zlibConstants } from "node:zlib";
+import { brotliCompressSync, deflateSync, constants as zlibConstants } from "node:zlib";
 import fontkit, { type Font } from "@pdf-lib/fontkit";
 import { decodePDFRawStream, PDFDict, PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -88,6 +88,37 @@ function blank(font: Font, text: string): string {
   return [...new Set(text.replace(/\s/g, ""))]
     .filter((character) => !font.glyphForCodePoint(character.codePointAt(0) ?? 0).path.toSVG())
     .join("");
+}
+
+/** Wrap an sfnt in WOFF, compressing each table independently. */
+function woff(sfnt: Uint8Array): Uint8Array {
+  const source = new DataView(sfnt.buffer, sfnt.byteOffset, sfnt.byteLength);
+  const count = source.getUint16(4);
+  const header = Buffer.alloc(44 + count * 20);
+  header.write("wOFF");
+  header.set(sfnt.subarray(0, 4), 4);
+  header.writeUInt16BE(count, 12);
+  header.writeUInt32BE(sfnt.length, 16);
+  const chunks: Uint8Array[] = [header];
+  let offset = header.length;
+  for (let index = 0; index < count; index++) {
+    const record = 12 + index * 16;
+    const start = source.getUint32(record + 8);
+    const length = source.getUint32(record + 12);
+    const raw = sfnt.subarray(start, start + length);
+    const compressed = deflateSync(raw);
+    const table = compressed.length < length ? compressed : raw;
+    const target = 44 + index * 20;
+    header.set(sfnt.subarray(record, record + 8), target);
+    header.writeUInt32BE(offset, target + 4);
+    header.writeUInt32BE(table.length, target + 8);
+    header.writeUInt32BE(length, target + 12);
+    header.writeUInt32BE(source.getUint32(record + 4), target + 16);
+    chunks.push(table);
+    offset += table.length;
+  }
+  header.writeUInt32BE(offset, 8);
+  return Buffer.concat(chunks);
 }
 
 describe("figures in a font family the caller names", () => {
@@ -174,20 +205,58 @@ describe("figures in a font family the caller names", () => {
     expect(reports[0]?.file).toBe(join(FIXTURES, "FigureTestCollection.ttc"));
   });
 
-  it("refuses a family installed only as WOFF2, naming the build to install", async () => {
-    await expect(renderer().svg(authors("Ada"), options("Figure Test Web"))).rejects.toThrow(
-      /FigureTestWeb-Regular\.woff2 is a web font \(WOFF\), which figures cannot embed\. Install the \.ttf or \.otf build of Figure Test Web\./,
+  it("decodes WOFF2 before subsetting and draws it in SVG and PDF", async () => {
+    const figures = renderer();
+    const { embedded } = svgFonts(await figures.svg(authors("Ada"), options("Figure Test Web")));
+    expect(embedded.get("Figure Test Web")?.font.numGlyphs).toBeGreaterThan(1);
+    expect([...(await pdfFonts(await figures.pdf(authors("Ada"), options("Figure Test Web")))).keys()]).toEqual([
+      "CMCUST+FigureTestWeb-Regular",
+    ]);
+  });
+
+  it("draws the same outlines and widths from WOFF, WOFF2 and TTF", async () => {
+    const figures = renderer();
+    const raw = new Uint8Array(readFileSync(join(FIXTURES, "FigureTest-Regular.ttf")));
+    const web = new Uint8Array(readFileSync(join(FIXTURES, "FigureTestWeb-Regular.woff2")));
+    const faces: Font[] = [];
+    for (const fontData of [raw, woff(raw), web]) {
+      const result = svgFonts(await figures.svg(authors("Ada Lovelace"), { fontData }));
+      const face = [...result.embedded.values()][0]?.font;
+      expect(face).toBeDefined();
+      if (face) faces.push(face);
+      const pdf = await pdfFonts(await figures.pdf(authors("Ada Lovelace"), { fontData }));
+      expect([...pdf.values()][0]?.layout("Ada Lovelace").advanceWidth).toBe(face?.layout("Ada Lovelace").advanceWidth);
+    }
+    expect(faces.map((face) => face.layout("Ada Lovelace").advanceWidth)).toEqual(
+      Array(3).fill(faces[0]?.layout("Ada Lovelace").advanceWidth),
+    );
+    expect(faces.map((face) => face.glyphForCodePoint(65).path.toSVG())).toEqual(
+      Array(3).fill(faces[0]?.glyphForCodePoint(65).path.toSVG()),
     );
   });
 
-  it("draws a variable font's default instance at weight 400 and refuses one whose default is 100", async () => {
+  it("instances variable fonts at weight 400 even when the default is 100", async () => {
     const figures = renderer();
-    const { embedded } = svgFonts(await figures.svg(authors("Ada Lovelace"), options("Figure Test Variable")));
-    // The default instance, with no variation tables left for a viewer to apply.
-    expect(tables(embedded.get("Figure Test Variable")?.bytes)).not.toContain("fvar");
-    await expect(figures.pdf(authors("Ada"), options("Figure Test Thin"))).rejects.toThrow(
-      /FigureTestThin\.ttf is a variable font whose default instance is weight 100, not 400\. Install the static Regular build of Figure Test Thin/,
+    const regular = svgFonts(await figures.svg(authors("Ada Lovelace"), options("Figure Test Variable"))).embedded.get(
+      "Figure Test Variable",
     );
+    const thin = svgFonts(await figures.svg(authors("Ada Lovelace"), options("Figure Test Thin"))).embedded.get(
+      "Figure Test Thin",
+    );
+    expect(tables(thin?.bytes)).not.toContain("fvar");
+    expect(thin?.font.layout("Ada Lovelace").advanceWidth).toBe(regular?.font.layout("Ada Lovelace").advanceWidth);
+    expect(thin?.font.glyphForCodePoint(65).path.toSVG()).toBe(regular?.font.glyphForCodePoint(65).path.toSVG());
+    const pdf = await pdfFonts(await figures.pdf(authors("Ada Lovelace"), options("Figure Test Thin")));
+    expect([...pdf.values()][0]?.layout("Ada Lovelace").advanceWidth).toBe(
+      thin?.font.layout("Ada Lovelace").advanceWidth,
+    );
+  });
+
+  it("accepts font bytes without searching installed families", async () => {
+    const figures = renderer();
+    const fontData = new Uint8Array(readFileSync(join(FIXTURES, "FigureTest-Regular.ttf")));
+    const svg = await figures.svg(authors("Ada"), { fontData });
+    expect(svgFonts(svg).embedded.has("Figure Test")).toBe(true);
   });
 
   it("warns about a restricted-license font and embeds it anyway", async () => {

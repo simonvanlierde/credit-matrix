@@ -1,9 +1,9 @@
 export interface SubsetFace {
   /**
    * A standalone font with these code points' glyphs and the layout tables that reach them, at the default
-   * instance of a variable font. With `retainGids`, every glyph keeps its id, so ids from the whole face stay valid.
+   * instance of a variable font, unless axes are pinned explicitly. Undefined code points keep every glyph. With `retainGids`, every glyph keeps its id, so ids from the whole face stay valid.
    */
-  subset(codePoints: Iterable<number>, retainGids: boolean): Uint8Array;
+  subset(codePoints: Iterable<number> | undefined, retainGids: boolean, axes?: Record<string, number>): Uint8Array;
 }
 
 export interface Subsetter {
@@ -37,6 +37,9 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
     | "hb_face_destroy"
     | "hb_face_reference_blob"
     | "hb_set_add"
+    | "hb_set_invert"
+    | "hb_subset_input_glyph_set"
+    | "hb_subset_input_pin_axis_location"
     | "hb_subset_input_create_or_fail"
     | "hb_subset_input_destroy"
     | "hb_subset_input_pin_all_axes_to_default"
@@ -51,7 +54,7 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
   return {
     face(bytes) {
       return {
-        subset(codePoints, retainGids) {
+        subset(codePoints, retainGids, axes) {
           // The module's memory is fixed at 64 MB, so each subset copies its face in and frees it again
           // (about 10 ms for a 14 MB face) rather than keeping every face a long-lived renderer has seen.
           const data = hb.malloc(bytes.length);
@@ -66,10 +69,15 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
           try {
             if (!input) throw new Error("HarfBuzz could not start a font subset.");
             const unicodes = hb.hb_subset_input_unicode_set(input);
-            for (const point of codePoints) hb.hb_set_add(unicodes, point);
+            if (codePoints) for (const point of codePoints) hb.hb_set_add(unicodes, point);
+            else hb.hb_set_invert(hb.hb_subset_input_glyph_set(input));
             if (retainGids) hb.hb_subset_input_set_flags(input, RETAIN_GIDS);
-            // A no-op for a static face; a variable one becomes its default instance, which fontkit measures.
+            // Freeze all axes so viewers cannot apply a different instance to the embedded font.
             hb.hb_subset_input_pin_all_axes_to_default(input, face);
+            for (const [name, value] of Object.entries(axes ?? {})) {
+              const tag = [...name].reduce((number, char) => number * 256 + char.charCodeAt(0), 0);
+              hb.hb_subset_input_pin_axis_location(input, face, tag, value);
+            }
             result = hb.hb_subset_or_fail(face, input);
             if (!result) throw new Error("HarfBuzz could not subset a figure font.");
             blob = hb.hb_face_reference_blob(result);

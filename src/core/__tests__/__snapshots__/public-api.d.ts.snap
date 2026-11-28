@@ -116,12 +116,26 @@ type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif
  */
 type FigureFontProvider = (face: FigureFace) => Uint8Array | Promise<Uint8Array>;
 /**
- * A `font` family a figure cannot use: not found, installed only as a web font (WOFF), or a variable font
- * whose default instance is not the upright regular one.
+ * A font family or file a figure cannot read or use.
  */
 export declare class FigureFontFileError extends Error {
   readonly name = "FigureFontFileError";
 }
+interface FoundFont {
+  /** The family's own name, from the font file. */
+  family: string;
+  file: string;
+  /** A standalone face: one face of a collection is copied out into its own file. */
+  bytes: Uint8Array;
+  /** OS/2 fsType bit 0x0100: the face must be embedded whole. */
+  noSubset: boolean;
+  /** The face's own classification says serif: its fallback faces should be serif too. */
+  serif: boolean;
+  /** Set when the face's embedding permission restricts documents that embed it. */
+  warning?: string;
+}
+/** Decode and inspect one font supplied as bytes, without searching local font folders. */
+export declare function inspectFigureFont(input: Uint8Array, file?: string, preferredFamily?: string): Promise<FoundFont>;
 export declare class FigureFontError extends Error {
   readonly characters: string;
   readonly name = "FigureFontError";
@@ -136,6 +150,8 @@ export interface FigureOptions extends Omit<HeatmapSvgOptions, "font"> {
   font?: "sans" | "serif" | (string & {});
   /** Folders searched for a `font` family before the system font folders, the first one first. */
   fontPath?: string[];
+  /** A font file selected by the caller, used without searching installed font folders. */
+  fontData?: Uint8Array;
   /** Search only `fontPath`, not the system font folders. */
   ignoreSystemFonts?: boolean;
   /**
