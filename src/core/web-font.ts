@@ -35,7 +35,7 @@ export async function decodeWebFont(bytes: Uint8Array): Promise<Uint8Array> {
       transformedSize += transformed ? base128() : length;
       if (transformedSize > MAX_FONT) throw new FigureFontFileError("The web font expands past 64 MiB.");
     }
-    const { default: decompress } = await import("woff2-encoder/decompress");
+    const { default: decompress } = await import("./vendor/decompress.js");
     const decoded = await decompress(bytes);
     if (decoded.length > MAX_FONT) throw new FigureFontFileError("The web font expands past 64 MiB.");
     return decoded;

@@ -39,6 +39,18 @@ function record(bytes: Buffer, name: string): number {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("untrusted font containers", () => {
+  it("decodes WOFF2 when Content Security Policy forbids JavaScript string evaluation", async () => {
+    const bytes = readFileSync(new URL("fixtures/fonts/FigureTestWeb-Regular.woff2", import.meta.url));
+    const blocked = () => {
+      throw new Error("JavaScript string evaluation is disabled");
+    };
+    vi.stubGlobal("Function", new Proxy(Function, { apply: blocked, construct: blocked }));
+    const decoded = await decodeWebFont(bytes);
+    const found = await inspectFigureFont(decoded);
+    expect(found.family).toBe("Figure Test Web");
+    expect(decoded.subarray(0, 4)).toEqual(new Uint8Array([0, 1, 0, 0]));
+  });
+
   it("rejects truncated, oversized and implausible web-font headers", async () => {
     await expect(decodeWebFont(Buffer.from("wOFF"))).rejects.toThrow(/truncated/);
     const huge = container("wOF2");
