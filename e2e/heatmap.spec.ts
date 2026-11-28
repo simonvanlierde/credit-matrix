@@ -421,7 +421,8 @@ test.describe("touch-screen previews", () => {
       await expect(page.getByText(/Select to cycle/)).toBeHidden();
       // The whole page in this theme first, from the top, before the panel opens over it.
       expect((await scan(page)).violations).toEqual([]);
-      // On a phone the grid is a list of roles, so the figure export sits with the statement's outputs.
+      // On a phone the grid is a list of roles, so the figure export sits in the Statement bottom sheet.
+      await page.getByRole("tab", { name: "Statement", exact: true }).click();
       const heatmap = page.getByRole("button", { name: "Heatmap", exact: true });
       const copy = await page.getByRole("button", { name: "Copy statement" }).boundingBox();
       const exportAt = await heatmap.boundingBox();
@@ -493,6 +494,7 @@ for (const width of [1440, 320]) {
     await page.getByRole("button", { name: "Grayscale", exact: true }).click();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog", { name: "Heatmap options", exact: true })).toBeHidden();
+    if (width < 768) await page.getByRole("tab", { name: "Statement", exact: true }).click();
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     // Wait for the async preview to finish so the popover stops resizing and export buttons are enabled before axe runs.
     await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeEnabled({ timeout: 15_000 });
@@ -558,6 +560,7 @@ test("opens the right-click level picker at the cursor on a wide window", async 
 for (const width of [390, 1440]) {
   test(`keeps the selected color ring inside Figure settings at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
+    if (width < 768) await page.getByRole("tab", { name: "Statement", exact: true }).click();
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     await page.getByRole("button", { name: "Figure settings", exact: true }).click();
     const settings = page.getByRole("region", { name: "Figure settings", exact: true });

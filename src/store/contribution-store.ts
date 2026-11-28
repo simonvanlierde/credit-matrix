@@ -213,6 +213,8 @@ interface ContributionState {
   welcomeOpen: boolean;
   /** The open tab of the workspace inspector. UI state only: never persisted. */
   inspectorTab: InspectorTab;
+  /** Whether the inspector bottom sheet is expanded on phone (< md). Ephemeral. */
+  inspectorOpen: boolean;
   /**
    * Colour the grid, chips and statement links per contributor rather than in
    * the draft's one hue. Kept per draft, beside the hue it replaces; figures
@@ -294,6 +296,7 @@ interface ContributionState {
   openWelcome: () => void;
   closeWelcome: () => void;
   setInspectorTab: (tab: InspectorTab) => void;
+  setInspectorOpen: (open: boolean) => void;
   setColorByContributor: (on: boolean) => void;
   setTranspose: (on: boolean) => void;
   setInitials: (on: boolean) => void;
@@ -1131,6 +1134,7 @@ export const useContributionStore = create<ContributionState>()(
       normsField: null,
       welcomeOpen: false,
       inspectorTab: "statement",
+      inspectorOpen: false,
       colorByContributor: true,
       transpose: false,
       initials: false,
@@ -1321,6 +1325,7 @@ export const useContributionStore = create<ContributionState>()(
       openReview: (contributorId) =>
         set((state) => {
           state.inspectorTab = "review";
+          state.inspectorOpen = true;
           state.reviewFocus = contributorId;
         }),
 
@@ -1598,6 +1603,12 @@ export const useContributionStore = create<ContributionState>()(
       setInspectorTab: (tab) =>
         set((state) => {
           state.inspectorTab = tab;
+          state.inspectorOpen = true;
+        }),
+
+      setInspectorOpen: (open) =>
+        set((state) => {
+          state.inspectorOpen = open;
         }),
 
       setColorByContributor: (on) =>

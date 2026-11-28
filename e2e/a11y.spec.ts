@@ -59,6 +59,8 @@ test.describe("Accessibility (axe-core)", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
     const results = await scan(page);
     expect(results.violations).toEqual([]);
+    await page.getByRole("tab", { name: "Statement", exact: true }).click();
+    expect((await scan(page)).violations).toEqual([]);
   });
 
   test("import modal has no detectable violations", async ({ page }) => {

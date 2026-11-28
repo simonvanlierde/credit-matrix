@@ -31,7 +31,7 @@ export default function HomePage() {
 
           `desk` additionally locks the row to the viewport height; each pane
           scrolls its own content from there. */}
-          <div className="flex flex-col xl:grid xl:grid-cols-[auto_minmax(0,1fr)_26rem] 2xl:grid-cols-[auto_minmax(0,1fr)_30rem] desk:min-h-0 desk:flex-1 desk:overflow-hidden">
+          <div className="flex flex-col max-md:pb-14 xl:grid xl:grid-cols-[auto_minmax(0,1fr)_26rem] 2xl:grid-cols-[auto_minmax(0,1fr)_30rem] desk:min-h-0 desk:flex-1 desk:overflow-hidden">
             <LabelledSection
               labelKey="stepContributors"
               className="min-w-0 border-b border-outline-variant xl:border-b-0 desk:min-h-0"
@@ -46,7 +46,7 @@ export default function HomePage() {
             <LabelledSection
               id="inspector"
               labelKey="a11yInspector"
-              className="min-w-0 scroll-mt-16 border-t border-outline-variant xl:border-t-0 desk:min-h-0"
+              className="min-w-0 scroll-mt-16 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:border-edge max-md:bg-surface-bright max-md:shadow-sheet md:border-t md:border-outline-variant xl:border-t-0 desk:min-h-0"
             >
               <Inspector />
             </LabelledSection>

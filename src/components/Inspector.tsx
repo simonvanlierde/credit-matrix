@@ -1,4 +1,5 @@
-import { type KeyboardEvent, type ReactNode, useRef } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
 import { NormsPanel } from "@/components/NormsPanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
@@ -21,6 +22,8 @@ export function Inspector() {
   const t = useTranslations();
   const tab = useContributionStore((s) => s.inspectorTab);
   const setTab = useContributionStore((s) => s.setInspectorTab);
+  const sheetOpen = useContributionStore((s) => s.inspectorOpen);
+  const setSheetOpen = useContributionStore((s) => s.setInspectorOpen);
   const listRef = useRef<HTMLDivElement>(null);
   const openCount = useAskSummary().open;
   // The APG tabs pattern makes a panel a tab stop only when nothing in it is
@@ -78,43 +81,74 @@ export function Inspector() {
     button?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (
+        event.key === "Escape" &&
+        !event.defaultPrevented &&
+        !document.querySelector("dialog[open], [data-radix-popper-content-wrapper]")
+      ) {
+        setSheetOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sheetOpen, setSheetOpen]);
+
   return (
     <div className="flex flex-col desk:h-full desk:min-h-0">
-      <div
-        ref={listRef}
-        role="tablist"
-        aria-label={t("a11yInspector")}
-        onKeyDown={handleKeyDown}
-        className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-outline-variant/40 px-3 pt-2 md:px-4"
-      >
-        {TABS.map((id) => {
-          const selected = id === tab;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              id={`inspector-tab-${id}`}
-              aria-selected={selected}
-              aria-controls={`inspector-panel-${id}`}
-              tabIndex={selected ? 0 : -1}
-              onClick={() => setTab(id)}
-              className={`min-h-10 hyphens-auto border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
-                selected
-                  ? "border-accent text-accent"
-                  : "border-transparent text-on-surface-variant hover:text-on-surface"
-              }`}
-            >
-              {labels[id]}
-              {id === "review" && openCount > 0 && (
-                <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-on-primary">
-                  <span aria-hidden="true">{openCount}</span>
-                  <span className="sr-only">{t("tabReviewOpen", { count: openCount })}</span>
-                </span>
-              )}
-            </button>
-          );
-        })}
+      <div className="flex shrink-0 items-center border-b border-outline-variant/40">
+        <div
+          ref={listRef}
+          role="tablist"
+          aria-label={t("a11yInspector")}
+          onKeyDown={handleKeyDown}
+          className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto px-3 pt-1 md:px-4 md:pt-2"
+        >
+          {TABS.map((id) => {
+            const selected = id === tab;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`inspector-tab-${id}`}
+                aria-selected={selected}
+                aria-controls={`inspector-panel-${id}`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setTab(id)}
+                className={`min-h-10 hyphens-auto border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+                  selected
+                    ? "border-accent text-accent"
+                    : "border-transparent text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                {labels[id]}
+                {id === "review" && openCount > 0 && (
+                  <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-on-primary">
+                    <span aria-hidden="true">{openCount}</span>
+                    <span className="sr-only">{t("tabReviewOpen", { count: openCount })}</span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          aria-expanded={sheetOpen}
+          aria-controls={`inspector-panel-${tab}`}
+          aria-label={t("a11yInspector")}
+          onClick={() => setSheetOpen(!sheetOpen)}
+          className="flex h-11 w-11 shrink-0 items-center justify-center text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary md:hidden"
+        >
+          {sheetOpen ? (
+            <ChevronDown className="size-4" aria-hidden="true" />
+          ) : (
+            <ChevronUp className="size-4" aria-hidden="true" />
+          )}
+        </button>
       </div>
       {TABS.map((id) => (
         <div
@@ -124,7 +158,9 @@ export function Inspector() {
           aria-labelledby={`inspector-tab-${id}`}
           hidden={id !== tab}
           tabIndex={panelIsStop[id] ? 0 : undefined}
-          className="p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary md:p-4 desk:min-h-0 desk:flex-1 desk:overflow-y-auto"
+          className={`p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary md:p-4 desk:min-h-0 desk:flex-1 desk:overflow-y-auto ${
+            sheetOpen ? "max-md:max-h-[65dvh] max-md:overflow-y-auto" : "max-md:hidden"
+          }`}
         >
           {panels[id]}
         </div>

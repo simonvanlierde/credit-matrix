@@ -102,11 +102,11 @@ export function WelcomeCard() {
         else if (dropped) document.getElementById("main-content")?.focus();
       }}
       {...closeOnBackdrop}
-      className="m-auto w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded border border-edge bg-surface-bright p-0 text-on-surface shadow-sheet backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
+      className="m-auto w-[calc(100%-1.5rem)] max-w-3xl max-h-[90dvh] overflow-y-auto rounded border border-edge bg-surface-bright p-0 text-on-surface shadow-sheet backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm sm:w-full"
     >
       {/* The entrance moved onto the <dialog> itself (globals.css), so this card
           and the import modal now arrive the same way, backdrop included. */}
-      <div className="relative flex flex-col gap-6 px-6 py-6 md:px-8 md:py-8">
+      <div className="relative flex flex-col gap-4 px-5 py-5 md:gap-6 md:px-8 md:py-8">
         <button
           type="button"
           onClick={closeWelcome}

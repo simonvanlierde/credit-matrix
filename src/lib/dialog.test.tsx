@@ -33,12 +33,18 @@ describe("useModalDialog", () => {
     expect(dialog.close).toHaveBeenCalledTimes(1);
   });
 
-  it("focuses the control marked data-autofocus once open", () => {
+  it("focuses the control marked data-autofocus without scrolling past the top", () => {
     const dialog = fakeDialog();
     dialog.innerHTML = '<button type="button">Close</button><button type="button" data-autofocus>Start</button>';
+    dialog.scrollTop = 40;
+    const target = dialog.querySelector<HTMLElement>("[data-autofocus]");
+    if (!target) throw new Error("Expected autofocus control");
+    const focusSpy = vi.spyOn(target, "focus");
     document.body.append(dialog);
     renderHook(() => useModalDialog(dialog as unknown as HTMLDialogElement, true));
     expect(document.activeElement?.textContent).toBe("Start");
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    expect(dialog.scrollTop).toBe(0);
     dialog.remove();
   });
 
