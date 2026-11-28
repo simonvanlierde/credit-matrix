@@ -214,6 +214,32 @@ describe("figures in a font family the caller names", () => {
     ]);
   });
 
+  it("ranks WOFF upright regular faces before earlier bold and italic files", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-web-rank-"));
+    try {
+      const regular = new Uint8Array(readFileSync(join(FIXTURES, "FigureTest-Regular.ttf")));
+      const bold = regular.slice();
+      const italic = regular.slice();
+      const table = (bytes: Uint8Array, tag: string) =>
+        new DataView(bytes.buffer).getUint32(12 + tables(bytes).indexOf(tag) * 16 + 8);
+      new DataView(bold.buffer).setUint16(table(bold, "OS/2") + 4, 700);
+      new DataView(italic.buffer).setUint16(table(italic, "OS/2") + 62, 1);
+      writeFileSync(join(folder, "a-bold.woff"), woff(bold));
+      writeFileSync(join(folder, "b-italic.woff"), woff(italic));
+      writeFileSync(join(folder, "z-regular.woff"), woff(regular));
+      const reports: FigureFontReport[] = [];
+      await renderer(reports).svg(authors("Ada"), options("Figure Test", [folder]));
+      expect(reports[0]?.file).toBe(join(folder, "z-regular.woff"));
+      // The regular web font also outranks a bold sfnt in the same search group.
+      writeFileSync(join(folder, "a-bold.ttf"), bold);
+      const mixed: FigureFontReport[] = [];
+      await renderer(mixed).svg(authors("Ada"), options("Figure Test", [folder]));
+      expect(mixed[0]?.file).toBe(join(folder, "z-regular.woff"));
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
   it("draws the same outlines and widths from WOFF, WOFF2 and TTF", async () => {
     const figures = renderer();
     const raw = new Uint8Array(readFileSync(join(FIXTURES, "FigureTest-Regular.ttf")));

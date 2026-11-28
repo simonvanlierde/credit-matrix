@@ -351,26 +351,26 @@ export async function findFigureFont(family: string, options: FontSearchOptions 
   const groups = (options.fontPath ?? []).map((folder) => [resolve(folder)]);
   if (!options.ignoreSystemFonts) groups.push(await systemFolders());
   let best: Face | undefined;
-  // One walk per folder: the web fonts are kept for the error when the family is not found.
-  const webFonts: string[] = [];
+  const { readFile } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
   for (const folders of groups) {
     for (const folder of folders)
       for (const file of await fontFiles(folder, FONT_FILE)) {
+        let candidates: Face[];
         if (WEB_FONT_FILE.test(file)) {
-          webFonts.push(file);
-          continue;
-        }
-        for (const face of await faces(file))
+          if (!(await webFontFamilies(file)).some((name) => name.toLowerCase() === wanted)) continue;
+          const decoded = await decodeWebFont(new Uint8Array(await readFile(file)));
+          const tables = new Map(
+            [...directory(decoded)].map(([tag, record]) => [
+              tag,
+              decoded.subarray(record.offset, record.offset + record.length),
+            ]),
+          );
+          const face = faceInfo(file, 0, tables);
+          candidates = face ? [face] : [];
+        } else candidates = await faces(file);
+        for (const face of candidates)
           if (face.families.some((name) => name.toLowerCase() === wanted) && (!best || compare(face, best) < 0))
             best = face;
-      }
-    // Decode only a matching web font; normal font searches never load the WOFF2 decoder.
-    if (!best)
-      for (const file of webFonts) {
-        if ((await webFontFamilies(file)).some((name) => name.toLowerCase() === wanted)) {
-          const { readFile } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
-          return inspectFigureFont(new Uint8Array(await readFile(file)), file, family);
-        }
       }
     // A family in a fontPath folder wins over the same family installed on the system.
     if (best) break;
@@ -379,7 +379,6 @@ export async function findFigureFont(family: string, options: FontSearchOptions 
   if (!best) {
     throw new FigureFontFileError(`Cannot find the font family ${family} in ${searched}.`);
   }
-  const { readFile } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
   const file = new Uint8Array(await readFile(best.file));
   const bytes = text(file.subarray(0, 4)) === "ttcf" ? standalone(file, best.offset) : file;
   return inspectFigureFont(bytes, best.file, family);
