@@ -394,7 +394,25 @@ export async function inspectFigureFont(
   const bytes = await decodeWebFont(input);
   if (!SFNT.has(text(bytes.subarray(0, 4))) || bytes.length < 12)
     throw new FigureFontFileError(`${file} is not a standalone TrueType or OpenType font.`);
+  const header = view(bytes);
+  if (12 + header.getUint16(4) * 16 > bytes.length)
+    throw new FigureFontFileError(`${file} has a truncated font directory.`);
   const tables = directory(bytes);
+  for (const [tag, record] of tables) {
+    if (record.offset + record.length > bytes.length)
+      throw new FigureFontFileError(`${file} has a truncated ${tag} table.`);
+  }
+  for (const [tag, minimum] of [
+    ["name", 6],
+    ["OS/2", 64],
+    ["head", 54],
+    ["hhea", 36],
+    ["maxp", 6],
+    ["cmap", 4],
+  ] as const) {
+    if ((tables.get(tag)?.length ?? 0) < minimum)
+      throw new FigureFontFileError(`${file} has no readable ${tag} table.`);
+  }
   const table = (tag: string) => {
     const record = tables.get(tag);
     if (record && record.offset + record.length > bytes.length)

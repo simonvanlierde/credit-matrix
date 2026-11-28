@@ -165,6 +165,8 @@ const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
   .filter((file) => !docsChunks.has(file))
   // The statement reader loads on request; the service worker caches it then, like any same-origin file.
   .filter((file) => !file.startsWith("statement-reader.worker-"))
+  // Web-font decoding is needed only for a selected WOFF2 file.
+  .filter((file) => !file.startsWith("decompress-"))
   .map((file) => `/assets/${file}`)
   .concat(["/manifest.webmanifest", "/fonts/newsreader-italic-latin.woff2"])
   .sort();

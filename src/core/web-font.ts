@@ -52,6 +52,7 @@ export async function decodeWebFont(bytes: Uint8Array): Promise<Uint8Array> {
   output.setUint16(8, Math.log2(power));
   output.setUint16(10, count * 16 - power * 16);
   let at = 12 + count * 16;
+  let head = -1;
   for (let index = 0; index < count; index++) {
     const record = 44 + index * 20;
     const offset = data.getUint32(record + 4);
@@ -97,7 +98,14 @@ export async function decodeWebFont(bytes: Uint8Array): Promise<Uint8Array> {
     output.setUint32(target + 8, at);
     output.setUint32(target + 12, length);
     result.set(table, at);
+    if (data.getUint32(record) === 0x68656164 && length >= 12) head = at;
     at += Math.ceil(length / 4) * 4;
   }
+  if (at !== result.length || head < 0)
+    throw new FigureFontFileError("The web font has an invalid sfnt length or head table.");
+  output.setUint32(head + 8, 0);
+  let sum = 0;
+  for (let offset = 0; offset < result.length; offset += 4) sum = (sum + output.getUint32(offset)) % 2 ** 32;
+  output.setUint32(head + 8, (0xb1b0afba - sum + 2 ** 32) % 2 ** 32);
   return result;
 }

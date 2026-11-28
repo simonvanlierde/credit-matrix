@@ -25,7 +25,8 @@ const DOCS_LIMIT_GZIP = 6_000;
 const SEARCH_LIMIT = 490_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 // Measured 2026-11-15: 526.4 kB gzip including bidi-js.
-const FIGURE_LIMIT_GZIP = 555_000;
+// WOFF2 decoding loads only for a web font; measured 2026-11-28: 654.1 kB including its lazy chunk.
+const FIGURE_LIMIT_GZIP = 675_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
 // precached, and the subsetter every export needs (0.68 MB). Any other figure font is 0.62-14.9 MB.
 // Measured 2026-11-12: 4.30 MB including pages, their linked UI fonts and the offline manifest.
@@ -55,7 +56,7 @@ if (files.length === 0) {
 const kb = (n) => `${(n / 1000).toFixed(1)} kB`;
 // The font family search, the font provider it shares with the figure exporter, and bidi-js are chunks
 // that load only with the figure exporter.
-const figure = ({ name }) => /^(?:figures|font-search|figure-fonts|bidi)-/.test(name);
+const figure = ({ name }) => /^(?:figures|font-search|figure-fonts|bidi|decompress)-/.test(name);
 // The docs chunks by source, from the manifest: their file names (README-*, heatmap-*) say too little.
 const manifest = JSON.parse(readFileSync(join(dir, "..", ".vite", "manifest.json"), "utf8"));
 const docsFiles = new Set(

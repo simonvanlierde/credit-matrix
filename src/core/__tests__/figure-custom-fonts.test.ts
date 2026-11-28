@@ -252,6 +252,39 @@ describe("figures in a font family the caller names", () => {
     );
   });
 
+  it("pins optical size to the label size and caches each instance separately", async () => {
+    // Reuse the fixture's outline variation as an optical-size axis with a 6–32 point range.
+    const fontData = new Uint8Array(readFileSync(join(FIXTURES, "FigureTestVariable.ttf")));
+    const data = new DataView(fontData.buffer);
+    const axisRecord = 12 + tables(fontData).indexOf("fvar") * 16;
+    const fvar = data.getUint32(axisRecord + 8);
+    const axis = fvar + data.getUint16(fvar + 4);
+    fontData.set(Buffer.from("opsz"), axis);
+    data.setInt32(axis + 4, 6 * 65536);
+    data.setInt32(axis + 8, 10.5 * 65536);
+    data.setInt32(axis + 12, 32 * 65536);
+    const figures = renderer();
+    const outline = async (fontSize: number) => {
+      const result = svgFonts(await figures.svg(authors("Ada"), { fontData, fontSize }));
+      return [...result.embedded.values()][0]?.font.glyphForCodePoint(65).path.toSVG();
+    };
+    const small = await outline(6);
+    expect(await outline(32)).not.toBe(small);
+    expect(await outline(6)).toBe(small);
+  });
+
+  it("decodes WOFF in a browser without Node modules", async () => {
+    const { inspectFigureFont } = await import("../font-search");
+    const raw = new Uint8Array(readFileSync(join(FIXTURES, "FigureTest-Regular.ttf")));
+    vi.stubGlobal("process", undefined);
+    try {
+      const found = await inspectFigureFont(woff(raw));
+      expect(found.family).toBe("Figure Test");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("accepts font bytes without searching installed families", async () => {
     const figures = renderer();
     const fontData = new Uint8Array(readFileSync(join(FIXTURES, "FigureTest-Regular.ttf")));
