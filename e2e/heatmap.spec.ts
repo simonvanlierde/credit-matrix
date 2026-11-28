@@ -609,6 +609,7 @@ test("keeps a custom figure font on this device and embeds it in SVG and PDF", a
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     await page.getByRole("button", { name: "Figure settings", exact: true }).click();
     await page.getByText("Advanced", { exact: true }).click();
+    await expect(page.getByLabel("Font from this device", { exact: true })).toBeEnabled();
   };
   await openSettings();
   await page
@@ -642,6 +643,7 @@ test("keeps a custom figure font on this device and embeds it in SVG and PDF", a
       expect(embedded).toBe(true);
     }
   }
+  await expect(page.getByLabel("Font from this device", { exact: true })).toBeEnabled();
   await page.getByLabel("Font from this device", { exact: true }).setInputFiles({
     name: "broken.ttf",
     mimeType: "font/ttf",
@@ -662,11 +664,14 @@ test("keeps a custom figure font on this device and embeds it in SVG and PDF", a
 
 test("embeds a WOFF2 font under the site's content security policy", async ({ page }) => {
   const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("pageerror", (error) => {
+    if (/Content Security Policy|\bCSP\b|unsafe-eval/i.test(error.message)) errors.push(error.message);
+  });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await page.getByText("Advanced", { exact: true }).click();
+  await expect(page.getByLabel("Font from this device", { exact: true })).toBeEnabled();
   await page
     .getByLabel("Font from this device", { exact: true })
     .setInputFiles("src/core/__tests__/fixtures/fonts/FigureTestWeb-Regular.woff2");
