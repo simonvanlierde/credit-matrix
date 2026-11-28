@@ -1992,3 +1992,27 @@ msgstr "Nessun contatto"
 
 msgid "annGroupAdded"
 msgstr "{name} aggiunto come gruppo."
+
+msgid "heatmapCustomFont"
+msgstr "Carattere da questo dispositivo"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF o WOFF2, fino a 32 MiB. Salvato su questo dispositivo; mai caricato né condiviso con una bozza."
+
+msgid "heatmapCustomFontActive"
+msgstr "Questa figura usa {family}."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Rimuovi carattere personalizzato"
+
+msgid "heatmapCustomFontLoading"
+msgstr "Verifica e salvataggio del carattere…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "Impossibile usare questo carattere. Scegli un altro file di carattere."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "Impossibile salvare o caricare il carattere su questo dispositivo. Consenti i dati del sito e riprova."
+
+msgid "aboutPrivacyFonts"
+msgstr "I caratteri personalizzati delle figure rimangono nello spazio IndexedDB di questo browser finché non li rimuovi o cancelli i dati del sito. Non vengono mai caricati né inclusi nelle bozze condivise o nelle esportazioni JSON. Le figure scaricate incorporano il carattere."

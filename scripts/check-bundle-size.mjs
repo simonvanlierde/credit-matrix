@@ -16,7 +16,8 @@ import { gzipSync } from "node:zlib";
 // writing-tool switcher is links, so docs no longer pull the Radix select into a shared chunk.
 // Measured 2026-11-26: 449.7 kB with the statement review's model checks and their strings.
 // Measured 2026-11-26: 456.9 kB with group contributors: their editor, exporters and strings.
-const LIMIT_GZIP = 458_000;
+// Measured 2026-11-28: 461.5 kB with device-local figure fonts and their translated controls.
+const LIMIT_GZIP = 463_000;
 // Measured 2026-11-16: 5.4 kB for docs navigation, tool links, section outlines read from the
 // prerendered HTML, and live examples. Markdown stays prerendered.
 const DOCS_LIMIT_GZIP = 6_000;

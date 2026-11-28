@@ -1,5 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: Playwright reads the browser's downloaded files.
 import { readFile } from "node:fs/promises";
+// biome-ignore lint/correctness/noNodejsModules: inspect PDFs with the renderer’s own dependency.
+import { createRequire } from "node:module";
 import { expect, test } from "@playwright/test";
 import { createAuthor } from "../src/core/parse-authors";
 import { DEFAULT_HEATMAP_SETTINGS } from "../src/lib/heatmap-settings";
@@ -599,4 +601,61 @@ test("uses extra desktop space while keeping short windows compact", async ({ pa
   expect(sizes[1]?.width).toBeGreaterThan(sizes[0]?.width ?? 0);
   expect(sizes[1]?.previewHeight).toBeGreaterThan(sizes[0]?.previewHeight ?? 0);
   expect(sizes[1]?.optionsWidth).toBeGreaterThan(sizes[0]?.optionsWidth ?? 0);
+});
+
+test("keeps a custom figure font on this device and embeds it in SVG and PDF", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const openSettings = async () => {
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+    await page.getByText("Advanced", { exact: true }).click();
+  };
+  await openSettings();
+  await page
+    .getByLabel("Font from this device", { exact: true })
+    .setInputFiles("src/core/__tests__/fixtures/fonts/FigureTest-Regular.ttf");
+  await expect(page.getByText("Using Figure Test for this figure.", { exact: true })).toBeVisible();
+  const image = page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img");
+  await expect.poll(async () => decodeURIComponent((await image.getAttribute("src")) ?? "")).toContain("Figure Test");
+  for (const format of ["SVG", "PDF"]) {
+    const downloaded = page.waitForEvent("download");
+    await page.getByRole("button", { name: `Download ${format}`, exact: true }).click();
+    const path = await (await downloaded).path();
+    if (!path) throw new Error("Expected figure download");
+    const content = await readFile(path);
+    if (format === "SVG") expect(content.toString()).toContain("font-family:'Figure Test'");
+    else {
+      const { PDFDocument, PDFDict, PDFName, PDFRawStream } = createRequire(
+        require.resolve("credit-matrix/package.json"),
+      )("pdf-lib");
+      const pdf = await PDFDocument.load(content);
+      let embedded = false;
+      for (const [, object] of pdf.context.enumerateIndirectObjects()) {
+        if (
+          object instanceof PDFDict &&
+          object.get(PDFName.of("FontName"))?.toString() === "/CMCUST+FigureTest-Regular"
+        ) {
+          expect(object.lookup(PDFName.of("FontFile2"))).toBeInstanceOf(PDFRawStream);
+          embedded = true;
+        }
+      }
+      expect(embedded).toBe(true);
+    }
+  }
+  await page.getByLabel("Font from this device", { exact: true }).setInputFiles({
+    name: "broken.ttf",
+    mimeType: "font/ttf",
+    buffer: Buffer.from("not a font"),
+  });
+  await expect(page.getByRole("alert").filter({ hasText: "Cannot use this font" })).toBeVisible();
+  await expect(page.getByText("Using Figure Test for this figure.", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain("Figure Test");
+  await page.reload();
+  await openSettings();
+  await expect(page.getByText("Using Figure Test for this figure.", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Remove custom font", exact: true }).click();
+  await expect(page.getByText("Using Figure Test for this figure.", { exact: true })).toHaveCount(0);
+  await page.reload();
+  await openSettings();
+  await expect(page.getByText("Using Figure Test for this figure.", { exact: true })).toHaveCount(0);
 });

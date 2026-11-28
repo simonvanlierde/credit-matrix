@@ -1992,3 +1992,27 @@ msgstr "Geen contactpersoon"
 
 msgid "annGroupAdded"
 msgstr "{name} toegevoegd als groep."
+
+msgid "heatmapCustomFont"
+msgstr "Lettertype van dit apparaat"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF of WOFF2, maximaal 32 MiB. Opgeslagen op dit apparaat; nooit geüpload of gedeeld met een concept."
+
+msgid "heatmapCustomFontActive"
+msgstr "{family} wordt gebruikt voor deze figuur."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Aangepast lettertype verwijderen"
+
+msgid "heatmapCustomFontLoading"
+msgstr "Het lettertype controleren en opslaan…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "Dit lettertype kan niet worden gebruikt. Kies een ander lettertypebestand."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "Het lettertype kan niet worden opgeslagen of geladen op dit apparaat. Sta sitegegevens toe en probeer het opnieuw."
+
+msgid "aboutPrivacyFonts"
+msgstr "Aangepaste lettertypen voor figuren blijven in de IndexedDB-opslag van deze browser totdat je ze verwijdert of de sitegegevens wist. Ze worden nooit geüpload en staan niet in gedeelde concepten of JSON-exports. Gedownloade figuren bevatten het lettertype."
