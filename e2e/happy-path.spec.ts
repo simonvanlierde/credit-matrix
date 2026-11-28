@@ -1014,6 +1014,39 @@ test.describe("Happy path UI flows", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   });
 
+  test("adapts the welcome dialog, inspector sheet, and statement actions to phone width", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/#getting-started");
+    const dialog = page.locator("dialog#getting-started");
+    await expect(dialog).toBeVisible();
+    const welcome = await page.evaluate(() => {
+      const dlg = document.querySelector("dialog#getting-started");
+      const h2 = document.getElementById("getting-started-title");
+      return {
+        scrollTop: dlg?.scrollTop ?? -1,
+        clipped: (h2?.getBoundingClientRect().top ?? -1) < (dlg?.getBoundingClientRect().top ?? 0),
+      };
+    });
+    expect(welcome).toEqual({ scrollTop: 0, clipped: false });
+
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const toggle = page.getByRole("button", { name: "Statement, team, review and published practice" });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("tabpanel", { name: "Statement" })).toBeHidden();
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("tabpanel", { name: "Statement" })).toBeVisible();
+    const copy = await page.getByRole("button", { name: "Copy statement" }).boundingBox();
+    const exportData = await page.getByRole("button", { name: "Export data" }).boundingBox();
+    const heatmap = await page.getByRole("button", { name: "Heatmap", exact: true }).boundingBox();
+    expect(exportData?.y).toBeGreaterThan(copy?.y ?? Number.POSITIVE_INFINITY);
+    expect(Math.abs((exportData?.y ?? 0) - (heatmap?.y ?? Number.POSITIVE_INFINITY))).toBeLessThanOrEqual(2);
+
+    await page.keyboard.press("Escape");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
   test("downloads a browser-generated PNG heatmap", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
@@ -1049,6 +1082,7 @@ test.describe("Happy path UI flows", () => {
     await firstName.fill("A".repeat(240));
     await firstName.press("Enter");
     expect(await page.evaluate(() => document.body.scrollWidth)).toBe(320);
+    await page.getByRole("tab", { name: "Statement", exact: true }).click();
     const statement = page.getByRole("tabpanel", { name: "Statement" });
     expect((await statement.boundingBox())?.width).toBeLessThanOrEqual(320);
 

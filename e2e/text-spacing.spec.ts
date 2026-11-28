@@ -18,6 +18,7 @@ for (const width of [320, 375, 768, 1440]) {
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     await page.getByRole("button", { name: "Load sample data" }).click();
+    if (width < 768) await page.getByRole("tab", { name: "Statement", exact: true }).click();
     const trigger = page.getByRole("button", { name: "Heatmap", exact: true });
     await trigger.click();
     const dialog = page.getByRole("dialog", { name: "Heatmap", exact: true });

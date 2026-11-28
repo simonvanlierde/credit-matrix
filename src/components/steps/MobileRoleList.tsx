@@ -119,7 +119,7 @@ export function MobileRoleList({
                   translateRole={translateInterfaceRole}
                   describeRole={describeRole}
                   language={interfaceRoleLanguage}
-                  className="scroll-mt-36 text-sm"
+                  className="scroll-mt-36 scroll-mb-16 text-sm"
                 />
               </span>
               <button
@@ -131,7 +131,7 @@ export function MobileRoleList({
                 disabled={isFrozen(selectedAuthor.id)}
                 aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
                 onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
-                className={`contribution-cell scroll-mt-36 flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`contribution-cell scroll-mt-36 scroll-mb-16 flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
                   score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
                 }`}
               >

@@ -25,3 +25,17 @@ it("leaves Alt+Left to the browser as Back, and moves between tabs on a bare arr
   fireEvent.keyDown(statement, { key: "ArrowLeft" });
   expect(useContributionStore.getState().inspectorTab).toBe("norms");
 });
+
+it("toggles the phone inspector sheet and closes it on Escape", () => {
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <Inspector />
+    </IntlProvider>,
+  );
+  const toggle = screen.getByRole("button", { name: english.a11yInspector });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(toggle);
+  expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+});

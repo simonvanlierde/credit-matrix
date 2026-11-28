@@ -419,7 +419,7 @@ export function StatementOutput() {
       {/* Copy statement is the primary action; the data formats share one menu
           beside it, each with its own Copy and Download, so switching format
           costs no extra click. */}
-      <div className="relative z-10 flex flex-wrap items-center gap-x-3 gap-y-3">
+      <div className="relative z-10 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={() =>
@@ -429,14 +429,14 @@ export function StatementOutput() {
           }
           disabled={!statement}
           data-guide-target="copy"
-          className="inline-flex min-h-10 items-center justify-center gap-2 rounded bg-primary shadow-press px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded bg-primary shadow-press px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none md:w-auto"
         >
           <Copy className="h-[18px] w-[18px]" aria-hidden="true" />
           {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyStatement")}
         </button>
 
         <Popover>
-          <PopoverTrigger disabled={!hasAuthors} className={EXPORT_BUTTON}>
+          <PopoverTrigger disabled={!hasAuthors} className={`${EXPORT_BUTTON} flex-1 justify-center md:flex-none`}>
             <Download className="size-4" aria-hidden="true" />
             {toolchain ? t("toolchainOtherFormats") : t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
@@ -456,8 +456,12 @@ export function StatementOutput() {
         {/* On a phone the figure leaves from here, with the other outputs: the grid above is a list
             of roles there, with no figure on screen. */}
         {hasAuthors && (
-          <div className="md:hidden">
-            <HeatmapExports authors={authors} showLevels={!yesNo} triggerClassName={EXPORT_BUTTON} />
+          <div className="flex flex-1 md:hidden">
+            <HeatmapExports
+              authors={authors}
+              showLevels={!yesNo}
+              triggerClassName={`${EXPORT_BUTTON} w-full justify-center`}
+            />
           </div>
         )}
       </div>

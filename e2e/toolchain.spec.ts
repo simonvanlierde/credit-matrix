@@ -58,6 +58,7 @@ test("each writing tool renders cleanly and fits a phone", async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
+  await page.getByRole("tab", { name: "Statement", exact: true }).click();
   for (const [tool, label] of [
     ["Word", "Word"],
     ["Markdown or plain text", "Markdown"],

@@ -11,7 +11,9 @@ export function useModalDialog(dialog: HTMLDialogElement | null, open: boolean) 
     if (open && !dialog.open) {
       dialog.showModal();
       // showModal() focuses the first control; a dialog can name its primary action instead.
-      dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+      // preventScroll keeps the dialog at its heading on short screens instead of jumping past it.
+      dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+      dialog.scrollTop = 0;
     } else if (!open && dialog.open) dialog.close();
   }, [dialog, open]);
 }
