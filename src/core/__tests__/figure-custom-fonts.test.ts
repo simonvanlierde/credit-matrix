@@ -252,6 +252,15 @@ describe("figures in a font family the caller names", () => {
     );
   });
 
+  it("refuses a variable face whose axis range cannot reach weight 400", async () => {
+    const fontData = new Uint8Array(readFileSync(join(FIXTURES, "FigureTestVariable.ttf")));
+    const data = new DataView(fontData.buffer);
+    const fvar = data.getUint32(12 + tables(fontData).indexOf("fvar") * 16 + 8);
+    const axis = fvar + data.getUint16(fvar + 4);
+    data.setInt32(axis + 4, 500 * 65536);
+    await expect(renderer().svg(authors("Ada"), { fontData })).rejects.toThrow(/wght axis does not include 400/);
+  });
+
   it("pins optical size to the label size and caches each instance separately", async () => {
     // Reuse the fixture's outline variation as an optical-size axis with a 6–32 point range.
     const fontData = new Uint8Array(readFileSync(join(FIXTURES, "FigureTestVariable.ttf")));

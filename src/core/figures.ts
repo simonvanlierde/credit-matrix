@@ -337,6 +337,23 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
             sourceView.getUint32(12 + index * 16),
           ).includes(0x66766172);
           if (variable) {
+            const directoryRecord = Array.from({ length: sourceView.getUint16(4) }, (_, index) => 12 + index * 16).find(
+              (record) => sourceView.getUint32(record) === 0x66766172,
+            );
+            const fvar = sourceView.getUint32((directoryRecord ?? 0) + 8);
+            const firstAxis = fvar + sourceView.getUint16(fvar + 4);
+            for (let index = 0; index < sourceView.getUint16(fvar + 8); index++) {
+              const axis = firstAxis + index * sourceView.getUint16(fvar + 10);
+              const tag = String.fromCharCode(...found.bytes.subarray(axis, axis + 4));
+              const target = tag === "wght" ? 400 : tag === "ital" || tag === "slnt" ? 0 : undefined;
+              if (
+                target !== undefined &&
+                (sourceView.getInt32(axis + 4) / 65536 > target || sourceView.getInt32(axis + 12) / 65536 < target)
+              )
+                throw new FigureFontFileError(
+                  `${found.family} cannot draw upright weight 400: its ${tag} axis does not include ${target}.`,
+                );
+            }
             await load(SUBSETTER);
             if (!subsetter) throw new Error("The figure subsetter did not load.");
             found.bytes = subsetter
