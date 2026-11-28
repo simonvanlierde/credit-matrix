@@ -16,7 +16,8 @@ import { gzipSync } from "node:zlib";
 // writing-tool switcher is links, so docs no longer pull the Radix select into a shared chunk.
 // Measured 2026-11-26: 449.7 kB with the statement review's model checks and their strings.
 // Measured 2026-11-26: 456.9 kB with group contributors: their editor, exporters and strings.
-const LIMIT_GZIP = 458_000;
+// Measured 2026-11-28: 460.2 kB with the WebMCP registrar and shared chunk splits for lazy-loaded webmcp.ts.
+const LIMIT_GZIP = 462_000;
 // Measured 2026-11-16: 5.4 kB for docs navigation, tool links, section outlines read from the
 // prerendered HTML, and live examples. Markdown stays prerendered.
 const DOCS_LIMIT_GZIP = 6_000;
@@ -34,6 +35,8 @@ const PRECACHE_LIMIT = 4_400_000;
 // The statement reader's worker (the onnxruntime-web glue and a BPE tokenizer), loaded only when someone asks
 // for the model, never at install. Measured 2026-11-26: 28.2 kB gzip (142.9 kB with transformers.js).
 const READER_LIMIT_GZIP = 35_000;
+// WebMCP tool registration, loaded only when navigator.modelContext is present. Measured 2026-11-28: 2.6 kB gzip.
+const WEBMCP_LIMIT_GZIP = 5_000;
 // The w8 model it downloads from the Hugging Face Hub, as census/model.json records it (the worker refuses a
 // file of another size or hash). Measured 2026-11-26: 75.2 MB; int8 is 70.0 MB, fp32 275 MB.
 const MODEL_LIMIT = 80_000_000;
@@ -65,11 +68,13 @@ const docsFiles = new Set(
 );
 const docs = ({ name }) => docsFiles.has(name);
 const reader = ({ name }) => name.startsWith("statement-reader.worker-");
+const webmcp = ({ name }) => name.startsWith("webmcp-");
 for (const [label, limit, group] of [
-  ["app", LIMIT_GZIP, files.filter((file) => !(figure(file) || docs(file) || reader(file)))],
+  ["app", LIMIT_GZIP, files.filter((file) => !(figure(file) || docs(file) || reader(file) || webmcp(file)))],
   ["figure exporter", FIGURE_LIMIT_GZIP, files.filter(figure)],
   ["docs", DOCS_LIMIT_GZIP, files.filter(docs)],
   ["statement reader", READER_LIMIT_GZIP, files.filter(reader)],
+  ["webmcp", WEBMCP_LIMIT_GZIP, files.filter(webmcp)],
 ]) {
   const gzip = group.reduce((n, { bytes }) => n + gzipSync(bytes, { level: 9 }).length, 0);
   console.log(`check-bundle-size: ${label}: ${kb(gzip)} gzip (limit ${kb(limit)})`);

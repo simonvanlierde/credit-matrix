@@ -163,8 +163,8 @@ const precachedPages = paths.filter((path) => !/^\/docs(?:\/|$)/.test(path));
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
   .filter((file) => /\.(?:js|css)$|^NotoSans-Regular-[\w-]+\.ttf$|^harfbuzz-subset-[\w-]+\.wasm$/.test(file))
   .filter((file) => !docsChunks.has(file))
-  // The statement reader loads on request; the service worker caches it then, like any same-origin file.
-  .filter((file) => !file.startsWith("statement-reader.worker-"))
+  // The statement reader and WebMCP tools load on demand; the service worker caches them then, like any same-origin file.
+  .filter((file) => !file.startsWith("statement-reader.worker-") && !file.startsWith("webmcp-"))
   .map((file) => `/assets/${file}`)
   .concat(["/manifest.webmanifest", "/fonts/newsreader-italic-latin.woff2"])
   .sort();
