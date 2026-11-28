@@ -169,6 +169,19 @@ describe("custom figure font storage", () => {
     },
   );
 
+  it("closes a blocked request that later opens without starting a stale transaction", async () => {
+    const db = { close: vi.fn(), transaction: vi.fn() };
+    const request = { result: db } as unknown as IDBOpenDBRequest;
+    vi.spyOn(indexedDB, "open").mockImplementationOnce(() => {
+      queueMicrotask(() => request.onblocked?.call(request, new IDBVersionChangeEvent("blocked")));
+      return request;
+    });
+    await mount();
+    request.onsuccess?.call(request, new Event("success"));
+    expect(db.close).toHaveBeenCalledOnce();
+    expect(db.transaction).not.toHaveBeenCalled();
+  });
+
   it("closes a connection on version change while a read transaction is open", async () => {
     const transaction = IDBDatabase.prototype.transaction;
     const close = vi.spyOn(IDBDatabase.prototype, "close");

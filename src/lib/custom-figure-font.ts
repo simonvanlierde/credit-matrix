@@ -11,12 +11,20 @@ export interface CustomFigureFont {
 /** Font bytes stay outside drafts, share links and exported JSON. */
 function storage(mode: IDBTransactionMode, font?: CustomFigureFont | null): Promise<CustomFigureFont | null> {
   return new Promise((resolve, reject) => {
+    let blocked = false;
     const request = indexedDB.open("credit-matrix-figure-font", 1);
     request.onupgradeneeded = () => request.result.createObjectStore("fonts");
     request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error("Font storage is blocked by another tab."));
+    request.onblocked = () => {
+      blocked = true;
+      reject(new Error("Font storage is blocked by another tab."));
+    };
     request.onsuccess = () => {
       const db = request.result;
+      if (blocked) {
+        db.close();
+        return;
+      }
       db.onversionchange = () => db.close();
       const transaction = db.transaction("fonts", mode);
       const store = transaction.objectStore("fonts");
