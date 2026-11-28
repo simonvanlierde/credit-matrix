@@ -659,3 +659,22 @@ test("keeps a custom figure font on this device and embeds it in SVG and PDF", a
   await openSettings();
   await expect(page.getByText("Using Figure Test for this figure.", { exact: true })).toHaveCount(0);
 });
+
+test("embeds a WOFF2 font under the site's content security policy", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.getByText("Advanced", { exact: true }).click();
+  await page
+    .getByLabel("Font from this device", { exact: true })
+    .setInputFiles("src/core/__tests__/fixtures/fonts/FigureTestWeb-Regular.woff2");
+  await expect(page.getByText("Using Figure Test Web for this figure.", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  const downloaded = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PDF", exact: true }).click();
+  expect((await downloaded).suggestedFilename()).toBe("credit-heatmap.pdf");
+  expect(errors).toEqual([]);
+});
