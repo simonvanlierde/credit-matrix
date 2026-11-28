@@ -96,8 +96,9 @@ to choose its occurrence explicitly; automatic conversion refuses to guess.
 from census import standoff
 
 text = "LV: Software."
-label = [{"quote": "LV: Software", "mentions": ["LV"], "authors": [1],
-          "roles": [{"role": "software", "evidence": "named"}]}]
+label = [
+    {"quote": "LV: Software", "mentions": ["LV"], "authors": [1], "roles": [{"role": "software", "evidence": "named"}]}
+]
 annotation = standoff.encode("PMC0000001", text, label, n_authors=1)
 assert standoff.decode(annotation, "PMC0000001", text, n_authors=1) == label
 ```
