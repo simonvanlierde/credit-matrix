@@ -5,6 +5,9 @@ test.beforeEach(async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
+  if ((page.viewportSize()?.width ?? 1280) < 768) {
+    await page.getByRole("tab", { name: "Statement", exact: true }).click();
+  }
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
 });
 

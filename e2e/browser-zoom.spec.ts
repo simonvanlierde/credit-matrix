@@ -64,6 +64,8 @@ for (const colorScheme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "Import", exact: true }).click();
       await expect(page.getByRole("dialog", { name: "Import contributors", exact: true })).toBeVisible();
       await page.keyboard.press("Escape");
+      // At 200% zoom on a 1440px window (720px CSS), the inspector docks as a collapsed bottom sheet.
+      await page.getByRole("tab", { name: "Statement", exact: true }).click();
       const heatmap = page.getByRole("button", { name: "Heatmap", exact: true });
       await heatmap.click();
       const panel = page.getByRole("dialog", { name: "Heatmap", exact: true });
