@@ -1992,3 +1992,27 @@ msgstr "Sin contacto"
 
 msgid "annGroupAdded"
 msgstr "{name} añadido como grupo."
+
+msgid "heatmapCustomFont"
+msgstr "Fuente de este dispositivo"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF o WOFF2, hasta 32 MiB. Se guarda en este dispositivo; nunca se sube ni se comparte con un borrador."
+
+msgid "heatmapCustomFontActive"
+msgstr "Se usa {family} para esta figura."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Eliminar fuente personalizada"
+
+msgid "heatmapCustomFontLoading"
+msgstr "Comprobando y guardando la fuente…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "No se puede usar esta fuente. Elige otro archivo de fuente."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "No se puede guardar o cargar la fuente en este dispositivo. Permite los datos del sitio e inténtalo de nuevo."
+
+msgid "aboutPrivacyFonts"
+msgstr "Las fuentes personalizadas de las figuras permanecen en el almacenamiento IndexedDB de este navegador hasta que las elimines o borres los datos del sitio. Nunca se suben ni se incluyen en borradores compartidos o exportaciones JSON. Las figuras descargadas llevan la fuente incrustada."

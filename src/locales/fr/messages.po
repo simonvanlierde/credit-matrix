@@ -1992,3 +1992,27 @@ msgstr "Aucun contact"
 
 msgid "annGroupAdded"
 msgstr "{name} ajouté comme groupe."
+
+msgid "heatmapCustomFont"
+msgstr "Police de cet appareil"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF ou WOFF2, jusqu’à 32 MiB. Enregistrée sur cet appareil ; jamais envoyée ni partagée avec un brouillon."
+
+msgid "heatmapCustomFontActive"
+msgstr "{family} est utilisée pour cette figure."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Supprimer la police personnalisée"
+
+msgid "heatmapCustomFontLoading"
+msgstr "Vérification et enregistrement de la police…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "Impossible d’utiliser cette police. Choisissez un autre fichier de police."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "Impossible d’enregistrer ou de charger la police sur cet appareil. Autorisez les données du site et réessayez."
+
+msgid "aboutPrivacyFonts"
+msgstr "Les polices personnalisées des figures restent dans le stockage IndexedDB de ce navigateur jusqu’à leur suppression ou à l’effacement des données du site. Elles ne sont jamais envoyées et ne figurent pas dans les brouillons partagés ni dans les exports JSON. Les figures téléchargées intègrent la police."

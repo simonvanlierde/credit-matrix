@@ -5,6 +5,7 @@ import { type Contributor, heatmapDescription } from "@/core";
 import { heatmapPrintSize, SMALL_PRINT_PT, svgDimensions } from "@/core/export/heatmap-print";
 import { announce } from "@/lib/announce";
 import { copyFigure } from "@/lib/copy-figure";
+import { useCustomFigureFont } from "@/lib/custom-figure-font";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -131,6 +132,7 @@ export function HeatmapExports({
   } | null>(null);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
   const settings = useHeatmapSettings(showLevels);
+  const { font: customFont, busy: fontBusy, ready: fontReady } = useCustomFigureFont();
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
   });
@@ -139,11 +141,12 @@ export function HeatmapExports({
   const svgOptions = useMemo(
     () => ({
       ...settings,
+      fontData: customFont?.bytes,
       translateRole,
       translateUi,
       locale: outputLanguage,
     }),
-    [settings, translateRole, translateUi, outputLanguage],
+    [settings, customFont, translateRole, translateUi, outputLanguage],
   );
   // SVG and PNG draw what the bundled faces lack in system fonts; only PDF needs every glyph embedded.
   const renderSvg = async () => (await renderer()).svg(authors, { ...svgOptions, fallback: "system" });
@@ -165,7 +168,7 @@ export function HeatmapExports({
     rendering: boolean;
   }>({ preview: "", previewCause: null, missingGlyphs: null, fontsUnavailable: false, rendering: true });
   useEffect(() => {
-    if (!open) return;
+    if (!open || !fontReady) return;
     let active = true;
     setPreview((current) => ({ ...current, rendering: true }));
     // Typing in the settings changes the options on every keystroke; render once they pause.
@@ -201,7 +204,7 @@ export function HeatmapExports({
       active = false;
       clearTimeout(timer);
     };
-  }, [open, authors, svgOptions]);
+  }, [open, authors, svgOptions, fontReady]);
   const previewError = previewCause ? t("errHeatmapExport", { format: "SVG" }) : null;
   const dimensions = preview ? pngDimensions(preview, settings.pngWidthMm, settings.pngDpi) : null;
   const pngTooLarge = dimensions ? oversizedPng(dimensions) : false;
@@ -318,7 +321,8 @@ export function HeatmapExports({
           </div>
           {dimensions && (
             <span className="w-full text-xs tabular-nums text-on-surface-variant">
-              SVG · PDF · PNG {dimensions.width} × {dimensions.height} px · {settings.pngDpi} dpi
+              {customFont && <>{customFont.family} · </>}SVG · PDF · PNG {dimensions.width} × {dimensions.height} px ·{" "}
+              {settings.pngDpi} dpi
             </span>
           )}
           {settings.colorBy === "contributor" && (
@@ -371,7 +375,7 @@ export function HeatmapExports({
                     setSettings(value);
                   }}
                 />
-                <HeatmapRecipe settings={settings} language={outputLanguage} />
+                {!customFont && <HeatmapRecipe settings={settings} language={outputLanguage} />}
                 {/* On a phone the settings replace the preview, so give a visible way back to it. */}
                 <button
                   type="button"
@@ -389,7 +393,7 @@ export function HeatmapExports({
         <div className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap">
           <button
             type="button"
-            disabled={!preview || loading !== null || !!previewError || pngTooLarge}
+            disabled={!preview || loading !== null || fontBusy || !!previewError || pngTooLarge}
             onClick={() => void copyPng()}
             title={t("copyHeatmapHint")}
             className={`${MENU_ITEM} ${ACTION_ITEM}`}
@@ -408,6 +412,7 @@ export function HeatmapExports({
               disabled={
                 !preview ||
                 loading !== null ||
+                fontBusy ||
                 !!previewError ||
                 (format === "png" && pngTooLarge) ||
                 (format === "pdf" && (missingGlyphs !== null || fontsUnavailable))

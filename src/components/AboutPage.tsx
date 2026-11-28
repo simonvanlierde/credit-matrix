@@ -132,6 +132,8 @@ export function AboutPage({ version, citations }: { version: string; citations: 
           <p key={paragraph}>{paragraph}</p>
         ))}
 
+      <p>{t("aboutPrivacyFonts")}</p>
+
       <h3>{t("accessibility")}</h3>
       <p>
         {t.rich("aboutAccessibility", {

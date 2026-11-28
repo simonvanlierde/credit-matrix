@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { SettingChoice, SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
+import { selectFigureFont, useCustomFigureFont } from "@/lib/custom-figure-font";
 import { DEFAULT_HEATMAP_SETTINGS, type HeatmapFigureSettings as FigureSettings } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
+import { CustomFigureFont } from "./CustomFigureFont";
 import { GridViewSettings } from "./GridViewSettings";
 
 export function HeatmapFigureSettings({
@@ -12,9 +14,20 @@ export function HeatmapFigureSettings({
   onChange: (value: FigureSettings) => void;
 }) {
   const t = useTranslations();
+  const { font: customFont, busy, ready } = useCustomFigureFont();
   const patch = (change: Partial<FigureSettings>) => onChange({ ...value, ...change });
   return (
-    <SettingsPanel title={t("heatmapFigureSettings")} onReset={() => onChange({ ...DEFAULT_HEATMAP_SETTINGS })}>
+    <SettingsPanel
+      title={t("heatmapFigureSettings")}
+      onReset={
+        busy || !ready
+          ? undefined
+          : () => {
+              onChange({ ...DEFAULT_HEATMAP_SETTINGS });
+              if (customFont) void selectFigureFont(null);
+            }
+      }
+    >
       {/* The grid's own view settings, one value edited from either panel; Reset here leaves them. */}
       <SettingsSection label={t("heatmapSharedWithGrid")}>
         <GridViewSettings />
@@ -55,15 +68,18 @@ export function HeatmapFigureSettings({
           {t("heatmapAdvanced")}
         </summary>
         <div className="mt-2 grid gap-2">
-          <SettingChoice
-            label={t("heatmapFont")}
-            value={value.font}
-            onChange={(font) => patch({ font })}
-            options={[
-              ["sans", t("heatmapSans")],
-              ["serif", t("heatmapSerif")],
-            ]}
-          />
+          <CustomFigureFont />
+          {!customFont && (
+            <SettingChoice
+              label={t("heatmapFont")}
+              value={value.font}
+              onChange={(font) => patch({ font })}
+              options={[
+                ["sans", t("heatmapSans")],
+                ["serif", t("heatmapSerif")],
+              ]}
+            />
+          )}
           <FigureNumber
             label={t("heatmapFontSize")}
             value={value.fontSize}

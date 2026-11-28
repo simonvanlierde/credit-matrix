@@ -51,7 +51,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "pnpm --dir ../.. i18n:compile && rm -rf dist && tsdown && cp ../../LICENSE LICENSE",
+    "build": "pnpm --dir ../.. i18n:compile && rm -rf dist && tsdown && cp ../../LICENSE LICENSE && cp vendor/LICENSE-woff2-encoder.txt dist/LICENSE-woff2-encoder.txt",
     "prepack": "pnpm run build"
   },
   "dependencies": {

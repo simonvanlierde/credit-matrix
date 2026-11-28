@@ -85,7 +85,7 @@ describe("HeatmapExports", () => {
     expect(await screen.findByText(/Colored per contributor/)).toBeTruthy();
   }, 30_000);
 
-  it("Reset restores the figure's own options and leaves the shared ones", () => {
+  it("Reset restores the figure's own options and leaves the shared ones", async () => {
     const author = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
     act(() => {
       const store = useContributionStore.getState();
@@ -107,7 +107,7 @@ describe("HeatmapExports", () => {
     const pressed = (name: string) => within(panel).getByRole("radio", { name }).getAttribute("aria-checked");
     fireEvent.click(within(panel).getByRole("radio", { name: "Short labels" }));
     expect(pressed("Short labels")).toBe("true");
-    fireEvent.click(within(panel).getByRole("button", { name: "Reset" }));
+    fireEvent.click(await within(panel).findByRole("button", { name: "Reset" }));
     expect(pressed("Full labels")).toBe("true");
     const state = useContributionStore.getState();
     expect([state.heatmapMonoColor, state.transpose, state.initials, state.colorByContributor]).toEqual([

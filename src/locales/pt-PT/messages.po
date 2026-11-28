@@ -1992,3 +1992,27 @@ msgstr "Sem contacto"
 
 msgid "annGroupAdded"
 msgstr "{name} adicionado como grupo."
+
+msgid "heatmapCustomFont"
+msgstr "Tipo de letra deste dispositivo"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF ou WOFF2, até 32 MiB. Guardado neste dispositivo; nunca enviado nem partilhado com um rascunho."
+
+msgid "heatmapCustomFontActive"
+msgstr "A figura usa {family}."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Remover tipo de letra personalizado"
+
+msgid "heatmapCustomFontLoading"
+msgstr "A verificar e a guardar o tipo de letra…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "Não é possível usar este tipo de letra. Escolha outro ficheiro de tipo de letra."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "Não é possível guardar ou carregar o tipo de letra neste dispositivo. Permita os dados do site e tente novamente."
+
+msgid "aboutPrivacyFonts"
+msgstr "Os tipos de letra personalizados das figuras permanecem no armazenamento IndexedDB deste navegador até os remover ou limpar os dados do site. Nunca são enviados nem incluídos em rascunhos partilhados ou exportações JSON. As figuras descarregadas incorporam o tipo de letra."

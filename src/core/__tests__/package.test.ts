@@ -49,6 +49,11 @@ describe("the built credit-matrix package", () => {
       "package.json",
     ];
     expect(files).toEqual(expected.sort());
+    expect(files).toContain("dist/LICENSE-woff2-encoder.txt");
+    const decoderLicence = readFileSync(`${dist}LICENSE-woff2-encoder.txt`, "utf8");
+    expect(decoderLicence).toContain("Kyedo");
+    expect(decoderLicence).toContain("WOFF2 Authors");
+    expect(decoderLicence).toContain("Brotli Authors");
 
     const manifest = JSON.parse(readFileSync(`${root}package.json`, "utf8"));
     for (const target of [...Object.values(manifest.exports), ...Object.values(manifest.bin), manifest.types]) {

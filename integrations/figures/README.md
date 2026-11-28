@@ -81,6 +81,22 @@ The fonts use the SIL Open Font License 1.1. Embedding does not change the figur
 
 ## Use your own font
 
+In the app, open **Heatmap → Figure settings → Advanced → Font from this device** and choose a
+`.ttf`, `.otf`, `.woff` or `.woff2` file. The font stays in IndexedDB on this device. It is not
+uploaded or included in draft JSON or shared links. **Remove custom font** or resetting the app
+removes the stored file. The export status shows its family name.
+
+JavaScript callers can pass a file directly, in Node or a browser:
+
+```js
+const fontData = new Uint8Array(await file.arrayBuffer()); // a browser File
+const figures = createFigureRenderer({ onFont: ({ family, warning }) => console.log(family, warning) });
+const svg = await figures.svg(authors, { fontData });
+```
+
+In Node, use `new Uint8Array(await readFile("figure-font.woff2"))` from `node:fs/promises` instead.
+`fontData` takes precedence over the installed family named by `font`.
+
 In the CLI and the JavaScript API in Node, `font` also takes the name of an installed font family,
 such as `--font Inter` or `font: "Inter"`. The renderer looks for it in each `--font-path` folder
 (`fontPath`, in the order given), then in the system font folders, unless you pass
@@ -95,10 +111,10 @@ stops the export with `FigureFontFileError`; it never falls back silently.
 
 The renderer uses the upright face of the family closest to regular weight, by the CSS rule for
 weight 400, and a static face before a variable one. It reads `.ttf` and `.otf` files, CFF outlines
-included, and the matching face of a `.ttc` or `.otc` collection. It refuses a family installed only
-as `.woff` or `.woff2`: install its `.ttf` or `.otf` build. A variable font draws its default
-instance, so a variable font whose default is not upright weight 400 is refused, and the message
-names the static build to install.
+included, and the matching face of a `.ttc` or `.otc` collection. WOFF and WOFF2 files are decoded
+before embedding; the WOFF2 decoder loads only when needed. Variable fonts are instanced at weight
+400 upright, with optical size set to the base label size, before measurement and subsetting.
+Other variation axes keep their defaults.
 
 The family draws Latin and every other character it has, except the complex scripts and emoji:
 those keep their Noto faces, since only HarfBuzz shapes them. The built-in faces draw what the

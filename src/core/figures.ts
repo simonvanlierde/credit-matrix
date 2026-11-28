@@ -30,6 +30,7 @@ import { createSubsetter, type SubsetFace, type Subsetter } from "./subset";
 
 export type { FigureFace, FigureFontProvider } from "./figure-fonts";
 export { FigureFontFileError } from "./figure-fonts";
+export { inspectFigureFont } from "./font-search";
 
 export class FigureFontError extends Error {
   override readonly name = "FigureFontError";
@@ -52,6 +53,8 @@ export interface FigureOptions extends Omit<HeatmapSvgOptions, "font"> {
   font?: "sans" | "serif" | (string & {});
   /** Folders searched for a `font` family before the system font folders, the first one first. */
   fontPath?: string[];
+  /** A font file selected by the caller, used without searching installed font folders. */
+  fontData?: Uint8Array;
   /** Search only `fontPath`, not the system font folders. */
   ignoreSystemFonts?: boolean;
   /**
@@ -243,6 +246,8 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   const subsetFaces = new Map<FigureFont, SubsetFace>();
   // Each `font` family search, by family, font path and system-font switch.
   const customFonts = new Map<string, Promise<FontSource>>();
+  const memoryFonts = new WeakMap<Uint8Array, number>();
+  let nextMemoryFont = 0;
 
   function load(source: FontSource): Promise<void> {
     let pending = loading.get(source);
@@ -304,15 +309,57 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     const fallback = options?.fontFallback;
     if (fallback !== undefined && fallback !== "sans" && fallback !== "serif")
       return Promise.reject(new HeatmapOptionError("Figure font fallback must be sans or serif."));
-    if (family === undefined || family === "sans" || family === "serif") return Promise.resolve(undefined);
-    const key = JSON.stringify([family.trim().toLowerCase(), options?.fontPath ?? [], options?.ignoreSystemFonts]);
+    if (!options?.fontData && (family === undefined || family === "sans" || family === "serif"))
+      return Promise.resolve(undefined);
+    const data = options?.fontData;
+    if (data && !memoryFonts.has(data)) memoryFonts.set(data, nextMemoryFont++);
+    const key = JSON.stringify([
+      family?.trim().toLowerCase(),
+      options?.fontPath ?? [],
+      options?.ignoreSystemFonts,
+      data ? memoryFonts.get(data) : null,
+      options?.fontSize ?? 10.5,
+    ]);
     let pending = customFonts.get(key);
     if (!pending) {
       pending = import("./font-search")
-        .then(({ findFigureFont }) =>
-          findFigureFont(family, { fontPath: options?.fontPath, ignoreSystemFonts: options?.ignoreSystemFonts }),
+        .then(({ findFigureFont, inspectFigureFont }) =>
+          data
+            ? inspectFigureFont(data)
+            : findFigureFont(family ?? "", {
+                fontPath: options?.fontPath,
+                ignoreSystemFonts: options?.ignoreSystemFonts,
+              }),
         )
-        .then((found: FoundFont) => {
+        .then(async (found: FoundFont) => {
+          const sourceView = new DataView(found.bytes.buffer, found.bytes.byteOffset, found.bytes.byteLength);
+          const variable = Array.from({ length: sourceView.getUint16(4) }, (_, index) =>
+            sourceView.getUint32(12 + index * 16),
+          ).includes(0x66766172);
+          if (variable) {
+            const directoryRecord = Array.from({ length: sourceView.getUint16(4) }, (_, index) => 12 + index * 16).find(
+              (record) => sourceView.getUint32(record) === 0x66766172,
+            );
+            const fvar = sourceView.getUint32((directoryRecord ?? 0) + 8);
+            const firstAxis = fvar + sourceView.getUint16(fvar + 4);
+            for (let index = 0; index < sourceView.getUint16(fvar + 8); index++) {
+              const axis = firstAxis + index * sourceView.getUint16(fvar + 10);
+              const tag = String.fromCharCode(...found.bytes.subarray(axis, axis + 4));
+              const target = tag === "wght" ? 400 : tag === "ital" || tag === "slnt" ? 0 : undefined;
+              if (
+                target !== undefined &&
+                (sourceView.getInt32(axis + 4) / 65536 > target || sourceView.getInt32(axis + 12) / 65536 < target)
+              )
+                throw new FigureFontFileError(
+                  `${found.family} cannot draw upright weight 400: its ${tag} axis does not include ${target}.`,
+                );
+            }
+            await load(SUBSETTER);
+            if (!subsetter) throw new Error("The figure subsetter did not load.");
+            found.bytes = subsetter
+              .face(found.bytes)
+              .subset(undefined, true, { wght: 400, ital: 0, slnt: 0, opsz: options?.fontSize ?? 10.5 });
+          }
           // The SVG's @font-face rules go by family name: a custom "Noto Sans" beside the built-in fallback
           // Noto Sans would share one name, and a viewer would use only one of the two subsets.
           const builtIn = [...SOURCES, ...SCRIPT_FACES.flatMap(([, sans, serif]) => [sans, serif]), EMOJI].some(

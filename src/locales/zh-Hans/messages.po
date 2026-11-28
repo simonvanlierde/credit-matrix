@@ -1992,3 +1992,27 @@ msgstr "无联系人"
 
 msgid "annGroupAdded"
 msgstr "已将 {name} 添加为团体。"
+
+msgid "heatmapCustomFont"
+msgstr "此设备上的字体"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF、OTF、WOFF 或 WOFF2，最大 32 MiB。保存在此设备上，不会上传或随草稿共享。"
+
+msgid "heatmapCustomFontActive"
+msgstr "此图正在使用 {family}。"
+
+msgid "heatmapCustomFontRemove"
+msgstr "移除自定义字体"
+
+msgid "heatmapCustomFontLoading"
+msgstr "正在检查并保存字体…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "无法使用此字体。请选择其他字体文件。"
+
+msgid "heatmapCustomFontStorageError"
+msgstr "无法在此设备上保存或加载字体。请允许网站数据后重试。"
+
+msgid "aboutPrivacyFonts"
+msgstr "图表的自定义字体保存在此浏览器的 IndexedDB 中，直到你移除字体或清除网站数据。字体不会上传，也不会包含在共享草稿或 JSON 导出中。下载的图表会嵌入该字体。"

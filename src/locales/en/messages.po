@@ -1992,3 +1992,27 @@ msgstr "No contact"
 
 msgid "annGroupAdded"
 msgstr "{name} added as a group."
+
+msgid "heatmapCustomFont"
+msgstr "Font from this device"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF or WOFF2, up to 32 MiB. Saved on this device; never uploaded or shared with a draft."
+
+msgid "heatmapCustomFontActive"
+msgstr "Using {family} for this figure."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Remove custom font"
+
+msgid "heatmapCustomFontLoading"
+msgstr "Checking and saving the font…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "Cannot use this font. Choose another font file."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "Cannot save or load the font on this device. Allow site data and try again."
+
+msgid "aboutPrivacyFonts"
+msgstr "Custom figure fonts stay in this browser’s IndexedDB storage until you remove them or clear site data. They are never uploaded and are not included in shared drafts or JSON exports. Downloaded figures embed the font."

@@ -1992,3 +1992,27 @@ msgstr "Keine Kontaktperson"
 
 msgid "annGroupAdded"
 msgstr "{name} als Gruppe hinzugefügt."
+
+msgid "heatmapCustomFont"
+msgstr "Schriftart von diesem Gerät"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF, OTF, WOFF oder WOFF2, bis zu 32 MiB. Wird auf diesem Gerät gespeichert; niemals hochgeladen oder mit einem Entwurf geteilt."
+
+msgid "heatmapCustomFontActive"
+msgstr "{family} wird für diese Abbildung verwendet."
+
+msgid "heatmapCustomFontRemove"
+msgstr "Eigene Schriftart entfernen"
+
+msgid "heatmapCustomFontLoading"
+msgstr "Schriftart wird geprüft und gespeichert…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "Diese Schriftart kann nicht verwendet werden. Wähle eine andere Schriftdatei."
+
+msgid "heatmapCustomFontStorageError"
+msgstr "Die Schriftart kann auf diesem Gerät nicht gespeichert oder geladen werden. Erlaube Websitedaten und versuche es erneut."
+
+msgid "aboutPrivacyFonts"
+msgstr "Eigene Schriftarten für Abbildungen bleiben im IndexedDB-Speicher dieses Browsers, bis du sie entfernst oder die Websitedaten löschst. Sie werden niemals hochgeladen und sind nicht in geteilten Entwürfen oder JSON-Exporten enthalten. Heruntergeladene Abbildungen betten die Schriftart ein."

@@ -1992,3 +1992,27 @@ msgstr "担当者なし"
 
 msgid "annGroupAdded"
 msgstr "{name} をグループとして追加しました。"
+
+msgid "heatmapCustomFont"
+msgstr "この端末のフォント"
+
+msgid "heatmapCustomFontHint"
+msgstr "TTF、OTF、WOFF、WOFF2形式、最大32 MiB。この端末に保存され、アップロードや下書きとの共有は行われません。"
+
+msgid "heatmapCustomFontActive"
+msgstr "この図では{family}を使用しています。"
+
+msgid "heatmapCustomFontRemove"
+msgstr "カスタムフォントを削除"
+
+msgid "heatmapCustomFontLoading"
+msgstr "フォントを確認して保存しています…"
+
+msgid "heatmapCustomFontInvalid"
+msgstr "このフォントは使用できません。別のフォントファイルを選択してください。"
+
+msgid "heatmapCustomFontStorageError"
+msgstr "この端末でフォントを保存または読み込めません。サイトデータを許可して、もう一度お試しください。"
+
+msgid "aboutPrivacyFonts"
+msgstr "図のカスタムフォントは、削除するかサイトデータを消去するまで、このブラウザーのIndexedDBに保存されます。アップロードされることはなく、共有される下書きやJSONエクスポートにも含まれません。ダウンロードした図にはフォントが埋め込まれます。"

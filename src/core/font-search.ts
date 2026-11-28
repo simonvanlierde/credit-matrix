@@ -1,5 +1,7 @@
 // biome-ignore-all lint/suspicious/noBitwiseOperators: font tables pack flags into bit fields.
+
 import { FigureFontFileError, nodeModule } from "./figure-fonts";
+import { decodeWebFont } from "./web-font";
 
 // Finds a font family by name for figures, in Node: the `fontPath` folders first, then the system font
 // folders. Only figures.ts loads this module, and only for a family other than sans or serif.
@@ -316,18 +318,6 @@ function standalone(file: Uint8Array, offset: number): Uint8Array {
   return bytes;
 }
 
-/** The default instance's position on each axis of a variable face's fvar table. */
-function axisDefaults(fvar: Uint8Array): Map<string, number> {
-  const data = view(fvar);
-  const defaults = new Map<string, number>();
-  const axes = data.getUint16(4);
-  for (let index = 0; index < data.getUint16(8); index++) {
-    const record = axes + index * data.getUint16(10);
-    defaults.set(text(fvar.subarray(record, record + 4)), data.getInt32(record + 8) / 65536);
-  }
-  return defaults;
-}
-
 /**
  * Whether the face classes itself as serif: the OS/2 sFamilyClass class (1-5 and 7 serif, 8 sans), else
  * PANOSE Latin Text (family type 2) with a serif style of 2-10 (11-13 are sans). Unclassified faces are sans.
@@ -361,16 +351,24 @@ export async function findFigureFont(family: string, options: FontSearchOptions 
   const groups = (options.fontPath ?? []).map((folder) => [resolve(folder)]);
   if (!options.ignoreSystemFonts) groups.push(await systemFolders());
   let best: Face | undefined;
-  // One walk per folder: the web fonts are kept for the error when the family is not found.
-  const webFonts: string[] = [];
+  const { readFile } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
   for (const folders of groups) {
     for (const folder of folders)
       for (const file of await fontFiles(folder, FONT_FILE)) {
+        let candidates: Face[];
         if (WEB_FONT_FILE.test(file)) {
-          webFonts.push(file);
-          continue;
-        }
-        for (const face of await faces(file))
+          if (!(await webFontFamilies(file)).some((name) => name.toLowerCase() === wanted)) continue;
+          const decoded = await decodeWebFont(new Uint8Array(await readFile(file)));
+          const tables = new Map(
+            [...directory(decoded)].map(([tag, record]) => [
+              tag,
+              decoded.subarray(record.offset, record.offset + record.length),
+            ]),
+          );
+          const face = faceInfo(file, 0, tables);
+          candidates = face ? [face] : [];
+        } else candidates = await faces(file);
+        for (const face of candidates)
           if (face.families.some((name) => name.toLowerCase() === wanted) && (!best || compare(face, best) < 0))
             best = face;
       }
@@ -379,41 +377,61 @@ export async function findFigureFont(family: string, options: FontSearchOptions 
   }
   const searched = `${options.fontPath?.length ? `the font path (${options.fontPath.join(", ")})` : "no font path"}${options.ignoreSystemFonts ? ", with system fonts ignored" : " or the system fonts"}`;
   if (!best) {
-    for (const file of webFonts)
-      if ((await webFontFamilies(file)).some((name) => name.toLowerCase() === wanted))
-        throw new FigureFontFileError(
-          `${file} is a web font (WOFF), which figures cannot embed. Install the .ttf or .otf build of ${family}.`,
-        );
     throw new FigureFontFileError(`Cannot find the font family ${family} in ${searched}.`);
   }
-  const { readFile } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
   const file = new Uint8Array(await readFile(best.file));
   const bytes = text(file.subarray(0, 4)) === "ttcf" ? standalone(file, best.offset) : file;
+  return inspectFigureFont(bytes, best.file, family);
+}
+
+/** Decode and inspect one font supplied as bytes, without searching local font folders. */
+export async function inspectFigureFont(
+  input: Uint8Array,
+  file = "(memory)",
+  preferredFamily?: string,
+): Promise<FoundFont> {
+  const bytes = await decodeWebFont(input);
+  if (!SFNT.has(text(bytes.subarray(0, 4))) || bytes.length < 12)
+    throw new FigureFontFileError(`${file} is not a standalone TrueType or OpenType font.`);
+  const header = view(bytes);
+  if (12 + header.getUint16(4) * 16 > bytes.length)
+    throw new FigureFontFileError(`${file} has a truncated font directory.`);
   const tables = directory(bytes);
+  for (const [tag, record] of tables) {
+    if (record.offset + record.length > bytes.length)
+      throw new FigureFontFileError(`${file} has a truncated ${tag} table.`);
+  }
+  for (const [tag, minimum] of [
+    ["name", 6],
+    ["OS/2", 64],
+    ["head", 54],
+    ["hhea", 36],
+    ["maxp", 6],
+    ["cmap", 4],
+  ] as const) {
+    if ((tables.get(tag)?.length ?? 0) < minimum)
+      throw new FigureFontFileError(`${file} has no readable ${tag} table.`);
+  }
   const table = (tag: string) => {
     const record = tables.get(tag);
+    if (record && record.offset + record.length > bytes.length)
+      throw new FigureFontFileError(`${file} has a truncated ${tag} table.`);
     return record ? bytes.subarray(record.offset, record.offset + record.length) : new Uint8Array(64);
   };
-  const ownName = familyNames(table("name")).find((candidate) => candidate.toLowerCase() === wanted) ?? family;
-  if (best.variable) {
-    const defaults = axisDefaults(table("fvar"));
-    const weight = defaults.get("wght") ?? 400;
-    if (weight !== 400 || (defaults.get("ital") ?? 0) !== 0 || (defaults.get("slnt") ?? 0) !== 0)
-      throw new FigureFontFileError(
-        `${best.file} is a variable font whose default instance is ${weight === 400 ? "not upright" : `weight ${weight}, not 400`}. Install the static Regular build of ${ownName} (a .ttf or .otf file).`,
-      );
-  }
+  const names = familyNames(table("name"));
+  const ownName = names.find((candidate) => candidate.toLowerCase() === preferredFamily?.toLowerCase()) ?? names[0];
+  if (!ownName) throw new FigureFontFileError(`${file} has no readable font family name.`);
   const os2 = view(table("OS/2"));
   const fsType = os2.getUint16(8);
   const restricted = restriction(fsType);
   return {
     family: ownName,
-    file: best.file,
+    file,
     bytes,
     noSubset: (fsType & 0x100) !== 0,
     serif: isSerif(os2),
     warning: restricted
-      ? `${best.file} allows only ${restricted} (OS/2 fsType 0x${fsType.toString(16).padStart(4, "0")}). It is embedded anyway: check that the font's license lets you share the figure.`
+      ? `${file} allows only ${restricted} (OS/2 fsType 0x${fsType.toString(16).padStart(4, "0")}). It is embedded anyway: check that the font's license lets you share the figure.`
       : undefined,
   };
 }
