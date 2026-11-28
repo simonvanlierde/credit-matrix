@@ -79,3 +79,29 @@ Run the pilot before a full labelling run. It passes when two things hold:
 The 16 worked examples that the labellers read, with a `why` for each, are in
 `data/labels/defB-worked-examples.jsonl`. They come from published articles, so the file is not
 published. It stays in the gitignored data folder.
+
+## Keep annotations apart from statements
+
+`census.standoff` converts checked definition-B labels to JSON records containing the PMCID,
+a SHA-256 of the source statement, and assertion offsets. Keep the statement text and its source
+licence in a separate corpus file. Annotations still contain author numbers and name mentions;
+separating them from the text does not settle permission to publish either file.
+
+Offsets count Unicode code points from zero, with an exclusive end. They refer to the extracted
+statement string, before any whitespace or Unicode normalisation, rather than to the JATS XML.
+A changed source hash is an error. When a quote appears more than once, pass `spans=[(start, end), ...]`
+to choose its occurrence explicitly; automatic conversion refuses to guess.
+
+```python
+from census import standoff
+
+text = "LV: Software."
+label = [{"quote": "LV: Software", "mentions": ["LV"], "authors": [1],
+          "roles": [{"role": "software", "evidence": "named"}]}]
+annotation = standoff.encode("PMC0000001", text, label, n_authors=1)
+assert standoff.decode(annotation, "PMC0000001", text, n_authors=1) == label
+```
+
+For a corpus pilot, set the offset tolerance to zero before conversion: every decoded quote and
+validated label must match exactly after JSON serialisation. This tests storage fidelity. The
+annotator agreement gate above still applies when producing the labels.
